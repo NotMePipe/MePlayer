@@ -3,9 +3,10 @@ project(MePlayer)
 
 set(CMAKE_CXX_STANDARD 17)
 
-file(GLOB_RECURSE MY_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
-
-add_executable(${PROJECT_NAME} "${MY_SOURCES}")
+add_executable(${PROJECT_NAME}
+        src/main.cpp
+        src/Playback.cpp
+        include/Playback.h)
 
 include(FetchContent)
 FetchContent_Declare(
