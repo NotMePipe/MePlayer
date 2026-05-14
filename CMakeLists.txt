@@ -9,12 +9,21 @@ add_executable(${PROJECT_NAME}
         include/Playback.h)
 
 include(FetchContent)
+
 FetchContent_Declare(
         SDL3
         GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-        GIT_TAG d9d5536704d585616d4db3c8ba3c4ff6fc2757e1
+        GIT_TAG d9d5536704d585616d4db3c8ba3c4ff6fc2757e1 # 3.4.8
 )
-FetchContent_MakeAvailable(SDL3)
-target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3)
+
+FetchContent_Declare(
+        SDL3_mixer
+        GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer.git
+        GIT_TAG a5e1890afc5115ffd16cefdbb4d50f74bf4970ce # 3.2.2
+)
+
+FetchContent_MakeAvailable(SDL3 SDL3_mixer)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE SDL3_mixer::SDL3_mixer SDL3::SDL3)
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include/")
