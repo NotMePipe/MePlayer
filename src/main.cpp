@@ -1,3 +1,7 @@
+extern "C" {
+#include <libavcodec/avcodec.h>
+}
+
 #include <iostream>
 
 #include <SDL3/SDL.h>
@@ -33,7 +37,8 @@ int main(int argc, char* argv[]) {
     bool quit = false;
     SDL_Event event;
 
-    const auto *playback = new Playback("./Love & Money.m4a");
+    // const auto *playback = new Playback("./Love & Money.m4a");
+    const auto *playback = new Playback("./Heartbeat.wav");
 
     const std::string playback_length = playback->GetFormattedTrackLength();
 

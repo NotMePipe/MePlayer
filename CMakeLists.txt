@@ -24,6 +24,14 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(SDL3 SDL3_mixer)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE SDL3_mixer::SDL3_mixer SDL3::SDL3)
+# FFmpeg
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET libavcodec libavutil libavformat libswscale libswresample)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE
+        SDL3::SDL3
+        SDL3_mixer::SDL3_mixer
+        PkgConfig::FFMPEG
+)
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include/")
