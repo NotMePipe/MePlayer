@@ -1,14 +1,9 @@
-extern "C" {
-#include <libavcodec/avcodec.h>
-}
-
 #include <iostream>
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
 #include "Playback.h"
-#include "SDL3_mixer/SDL_mixer.h"
 
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
@@ -18,12 +13,6 @@ int main(int argc, char* argv[]) {
     {
         std::cerr << "Failed to initialize SDL: " << SDL_GetError() << std::endl;
         return -1;
-    }
-
-    if (!MIX_Init()) {
-        std::cerr << "Failed to initialize SDL_mixer: " << SDL_GetError() << std::endl;
-        SDL_Quit();
-        return -2;
     }
 
     SDL_Window *window = SDL_CreateWindow("MePlayer", SCREEN_WIDTH, SCREEN_HEIGHT, 0);
@@ -40,7 +29,7 @@ int main(int argc, char* argv[]) {
     // const auto *playback = new Playback("./Love & Money.m4a");
     const auto *playback = new Playback("./Heartbeat.wav");
 
-    const std::string playback_length = playback->GetFormattedTrackLength();
+    // const std::string playback_length = playback->GetFormattedTrackLength();
 
     bool paused = true;
     bool first = true;
@@ -52,32 +41,37 @@ int main(int argc, char* argv[]) {
                 debounce = true;
                 if (paused) {
                     paused = false;
-                    if (first) {
-                        playback->Play();
-                        first = false;
-                    } else {
+                    // if (first) {
+                    //     playback->Play();
+                    //     first = false;
+                    // } else {
                         playback->Resume();
-                    }
+                    // }
                 } else {
                     paused = true;
                     playback->Pause();
                 }
             }
-        } else if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_ESCAPE]) {
-            if (!debounce) {
-                debounce = true;
-                playback->Restart();
-            }
-        } else if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_RIGHT]) {
-            if (!debounce) {
-                debounce = true;
-                playback->JumpTo(playback->GetPlaybackPosition() + 5);
-            }
-        } else if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_LEFT]) {
-            if (!debounce) {
-                debounce = true;
-                playback->JumpTo(playback->GetPlaybackPosition() - 5);
-            }
+        // } else if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_ESCAPE]) {
+        //     if (!debounce) {
+        //         debounce = true;
+        //         playback->Restart();
+        //     }
+        // } else if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_RIGHT]) {
+        //     if (!debounce) {
+        //         debounce = true;
+        //         playback->JumpTo(playback->GetPlaybackPosition() + 5);
+        //     }
+        // } else if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_LEFT]) {
+        //     if (!debounce) {
+        //         debounce = true;
+        //         playback->JumpTo(playback->GetPlaybackPosition() - 5);
+        //     }
+        // } else if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_RETURN]) {
+        //     if (!debounce) {
+        //         debounce = true;
+        //         playback->FFMPEG_TEST("./Love & Money.m4a");
+        //     }
         } else {
             debounce = false;
         }
@@ -92,21 +86,20 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        std::string track_progress = playback->GetFormattedPlaybackPosition();
-
-        SDL_SetWindowTitle(window, track_progress.append("/").append(playback_length).c_str());
-
-        if (playback->GetPlaybackPosition() >= playback->GetTrackLength()) {
-            playback->Stop();
-            first = true;
-        }
+        // std::string track_progress = playback->GetFormattedPlaybackPosition();
+        //
+        // SDL_SetWindowTitle(window, track_progress.append("/").append(playback_length).c_str());
+        //
+        // if (playback->GetPlaybackPosition() >= playback->GetTrackLength()) {
+        //     playback->Stop();
+        //     first = true;
+        // }
     }
 
     delete playback;
 
     SDL_DestroyWindow(window);
 
-    MIX_Quit();
     SDL_Quit();
 
     return 0;

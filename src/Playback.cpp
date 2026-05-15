@@ -1,126 +1,175 @@
 #include <iostream>
-#include <string>
 
 #include "Playback.h"
 
-std::string FormatTime(unsigned int seconds);
-
 Playback::Playback(const char *filename) {
-    mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, nullptr);
-    if (!mixer) {
-        std::cerr << "Failed to create MIX device: " << SDL_GetError() << std::endl;
+    if (avformat_open_input(&format_context, filename, nullptr, nullptr) < 0) {
+        std::cout << "failed to open\n";
         return;
     }
 
-    audio = MIX_LoadAudio(mixer, filename, false);
-    if (!audio) {
-        std::cerr << "Failed to load audio: " << SDL_GetError() << std::endl;
-        MIX_DestroyMixer(mixer);
+    int audioStream = -1;
+
+    for (unsigned int i = 0; i < format_context->nb_streams; ++i) {
+        if (format_context->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+            audioStream = static_cast<int>(i);
+            break;
+        }
+    }
+
+    if (audioStream == -1) {
+        std::cout << "no audio stream found\n";
         return;
     }
 
-    track = MIX_CreateTrack(mixer);
-    if (!track) {
-        std::cerr << "Failed to create track: " << SDL_GetError() << std::endl;
-        MIX_DestroyAudio(audio);
-        MIX_DestroyMixer(mixer);
+    const AVCodecParameters *params = format_context->streams[audioStream]->codecpar;
+
+    const AVCodec *codec = avcodec_find_decoder(params->codec_id);
+
+    codec_context = avcodec_alloc_context3(codec);
+
+    avcodec_parameters_to_context(codec_context, params);
+
+    if (avcodec_open2(codec_context, codec, nullptr) < 0) {
+        std::cerr << "Could not open codec\n";
         return;
     }
 
-    if (!MIX_SetTrackAudio(track, audio)) {
-        std::cerr << "Failed to set track audio: " << SDL_GetError() << std::endl;
-        MIX_DestroyTrack(track);
-        MIX_DestroyAudio(audio);
-        MIX_DestroyMixer(mixer);
+    int outRate = 44100;
+    AVSampleFormat outFmt = AV_SAMPLE_FMT_S16;
+
+    AVChannelLayout outLayout;
+    av_channel_layout_default(&outLayout, 2);
+
+    swr = nullptr;
+
+    swr_alloc_set_opts2(
+        &swr,
+
+        &outLayout,
+        outFmt,
+        outRate,
+
+        &codec_context->ch_layout,
+        codec_context->sample_fmt,
+        codec_context->sample_rate,
+
+        0,
+        nullptr
+    );
+
+    swr_init(swr);
+
+    SDL_AudioSpec spec{};
+    spec.format = SDL_AUDIO_S16;
+    spec.channels = 2;
+    spec.freq = outRate;
+
+    device = SDL_OpenAudioDevice(
+        SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK,
+        &spec
+    );
+
+    if (!device) {
+        std::cout << SDL_GetError() << "\n";
         return;
     }
 
-    const Sint64 sample_frames = MIX_GetAudioDuration(audio);
+    stream = SDL_CreateAudioStream(
+        &spec,
+        &spec
+    );
 
-    if (sample_frames < 0) {
-        std::cerr << "Unable to determine track length" << std::endl;
+    if (!stream) {
+        std::cerr << "SDL_CreateAudioStream failed: " << SDL_GetError() << "\n";
         return;
     }
 
-    const Sint64 ms = MIX_AudioFramesToMS(audio, sample_frames);
+    SDL_BindAudioStream(device, stream);
 
-    dur_seconds = static_cast<int>(ms / 1000);
-    dur_formatted = FormatTime(dur_seconds);
+    SDL_PauseAudioDevice(device);
+
+    AVPacket *pkt = av_packet_alloc();
+    AVFrame *frame = av_frame_alloc();
+
+    while (av_read_frame(format_context, pkt) >= 0) {
+        if (pkt->stream_index != audioStream) {
+            av_packet_unref(pkt);
+            continue;
+        }
+
+        if (avcodec_send_packet(codec_context, pkt) < 0) {
+            av_packet_unref(pkt);
+            continue;
+        }
+
+        while (avcodec_receive_frame(codec_context, frame) == 0) {
+            // Number of output samples
+            const int64_t outSamples = av_rescale_rnd(
+                swr_get_delay(swr, codec_context->sample_rate) + frame->nb_samples,
+                outRate,
+                codec_context->sample_rate,
+                AV_ROUND_UP
+            );
+
+            uint8_t *outBuffer;
+            int outLineSize = 0;
+
+            av_samples_alloc(
+                &outBuffer,
+                &outLineSize,
+                2,
+                static_cast<int>(outSamples),
+                AV_SAMPLE_FMT_S16,
+                0
+            );
+
+            const int samples = swr_convert(
+                swr,
+                &outBuffer,
+                static_cast<int>(outSamples),
+                frame->data,
+                frame->nb_samples
+            );
+
+            const int bytes = av_samples_get_buffer_size(
+                nullptr,
+                2,
+                samples,
+                AV_SAMPLE_FMT_S16,
+                1
+            );
+
+            // Push PCM to SDL3 stream
+            if (!SDL_PutAudioStreamData(stream, outBuffer, bytes)) {
+                std::cerr << "SDL_PutAudioStreamData failed: " << SDL_GetError() << "\n";
+            }
+            av_freep(&outBuffer);
+        }
+
+        av_packet_unref(pkt);
+    }
+
+    av_frame_free(&frame);
+    av_packet_free(&pkt);
 }
 
 Playback::~Playback() {
-    MIX_DestroyAudio(audio);
-    MIX_DestroyTrack(track);
-    MIX_DestroyMixer(mixer);
-}
+    SDL_DestroyAudioStream(stream);
 
-void Playback::Play() const {
-    MIX_PlayTrack(track, 0);
+    SDL_CloseAudioDevice(device);
+
+    swr_free(&swr);
+
+    avcodec_free_context(&codec_context);
+
+    avformat_close_input(&format_context);
 }
 
 void Playback::Pause() const {
-    MIX_PauseTrack(track);
+    SDL_PauseAudioDevice(device);
 }
 
 void Playback::Resume() const {
-    MIX_ResumeTrack(track);
-}
-
-void Playback::Stop() const {
-    MIX_StopTrack(track, 0);
-}
-
-void Playback::Restart() const {
-    MIX_StopTrack(track, 0);
-    MIX_PlayTrack(track, 0);
-}
-
-void Playback::JumpTo(int timestamp_in_seconds) const {
-    if (timestamp_in_seconds < 0) {
-        timestamp_in_seconds = 0;
-    }
-
-    if (timestamp_in_seconds > dur_seconds) {
-        timestamp_in_seconds = dur_seconds;
-    }
-
-    if (!MIX_SetTrackPlaybackPosition(track, MIX_TrackMSToFrames(track, timestamp_in_seconds * 1000))) {
-        std::cerr << "Failed to set track playback position: " << SDL_GetError() << std::endl;
-    }
-}
-
-int Playback::GetTrackLength() const {
-    return dur_seconds;
-}
-
-std::string Playback::GetFormattedTrackLength() const {
-    return dur_formatted;
-}
-
-int Playback::GetPlaybackPosition() const {
-    const Sint64 sample_frames = MIX_GetTrackPlaybackPosition(track);
-
-    if (sample_frames < 0) {
-        std::cerr << "Unable to determine track length" << std::endl;
-        return -1;
-    }
-
-    const Sint64 ms = MIX_TrackFramesToMS(track, sample_frames);
-
-    return static_cast<int>(ms / 1000);
-}
-
-std::string Playback::GetFormattedPlaybackPosition() const {
-    return FormatTime(GetPlaybackPosition());
-}
-
-std::string FormatTime(const unsigned int seconds) {
-    const unsigned int min = seconds / 60;
-
-    std::string s_seconds = std::to_string(seconds - (min * 60));
-    if (s_seconds.length() == 1) {
-        s_seconds = "0" + s_seconds;
-    }
-
-    return std::to_string(min) + ":" + s_seconds;
+    SDL_ResumeAudioDevice(device);
 }

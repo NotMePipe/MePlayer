@@ -1,33 +1,28 @@
-#ifndef PLAYBACK_H
-#define PLAYBACK_H
+#ifndef Playback_H
+#define Playback_H
 
-#include <SDL3_mixer/SDL_mixer.h>
+#include <SDL3/SDL_audio.h>
 
+extern "C" {
+#include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
+#include <libswresample/swresample.h>
+}
 
 class Playback {
 public:
     explicit Playback(const char *filename);
     ~Playback();
 
-    void Play() const;
     void Resume() const;
     void Pause() const;
-    void Stop() const;
-
-    void Restart() const;
-    void JumpTo(int timestamp_in_seconds) const;
-
-    [[nodiscard]] int GetTrackLength() const;
-    [[nodiscard]] std::string GetFormattedTrackLength() const;
-    [[nodiscard]] int GetPlaybackPosition() const;
-    [[nodiscard]] std::string GetFormattedPlaybackPosition() const;
 private:
-    int dur_seconds = 0;
-    std::string dur_formatted;
+    SDL_AudioDeviceID device;
+    SDL_AudioStream *stream;
 
-    MIX_Mixer *mixer;
-    MIX_Audio *audio;
-    MIX_Track *track;
+    AVFormatContext *format_context = nullptr;
+    AVCodecContext *codec_context;
+    SwrContext *swr = nullptr;
 };
 
-#endif //PLAYBACK_H
+#endif //Playback_H
