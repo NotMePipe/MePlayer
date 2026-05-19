@@ -14,15 +14,36 @@ public:
     explicit Playback(const char *filename);
     ~Playback();
 
-    void Resume() const;
+    void Play() const;
     void Pause() const;
+    void Restart();
+
+    void Jump(int seconds);
+    void Seek(long long timestamp) const;
+
+    [[nodiscard]] int GetRawTrackLength() const;
+    [[nodiscard]] std::string GetTrackLength() const;
+
+    [[nodiscard]] int GetRawPlaybackPosition() const;
+    [[nodiscard]] std::string GetPlaybackPosition() const;
 private:
+    int streamIndex = -1;
+
+    int dur_seconds = 0;
+    int track_pos_seconds = 0;
+
+    SDL_AudioSpec spec{};
+
     SDL_AudioDeviceID device;
     SDL_AudioStream *stream;
 
     AVFormatContext *format_context = nullptr;
     AVCodecContext *codec_context;
-    SwrContext *swr = nullptr;
+
+    int FFmpeg_to_SDL() const;
+
+    static AVSampleFormat Planar_to_Packed(const AVSampleFormat fmt);
+    static SDL_AudioFormat FFmpeg_to_SDL_Audio_Format(AVSampleFormat fmt);
 };
 
 #endif //Playback_H

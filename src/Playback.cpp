@@ -2,27 +2,31 @@
 
 #include "Playback.h"
 
+int progressed_bytes = 0;
+
+void GetDataCallback(void *userdata, SDL_AudioStream *stream, int additional_amount, int total_amount);
+
 Playback::Playback(const char *filename) {
     if (avformat_open_input(&format_context, filename, nullptr, nullptr) < 0) {
         std::cout << "failed to open\n";
         return;
     }
 
-    int audioStream = -1;
+    streamIndex = -1;
 
     for (unsigned int i = 0; i < format_context->nb_streams; ++i) {
         if (format_context->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
-            audioStream = static_cast<int>(i);
+            streamIndex = static_cast<int>(i);
             break;
         }
     }
 
-    if (audioStream == -1) {
+    if (streamIndex == -1) {
         std::cout << "no audio stream found\n";
         return;
     }
 
-    const AVCodecParameters *params = format_context->streams[audioStream]->codecpar;
+    const AVCodecParameters *params = format_context->streams[streamIndex]->codecpar;
 
     const AVCodec *codec = avcodec_find_decoder(params->codec_id);
 
@@ -35,35 +39,9 @@ Playback::Playback(const char *filename) {
         return;
     }
 
-    int outRate = 44100;
-    AVSampleFormat outFmt = AV_SAMPLE_FMT_S16;
-
-    AVChannelLayout outLayout;
-    av_channel_layout_default(&outLayout, 2);
-
-    swr = nullptr;
-
-    swr_alloc_set_opts2(
-        &swr,
-
-        &outLayout,
-        outFmt,
-        outRate,
-
-        &codec_context->ch_layout,
-        codec_context->sample_fmt,
-        codec_context->sample_rate,
-
-        0,
-        nullptr
-    );
-
-    swr_init(swr);
-
-    SDL_AudioSpec spec{};
-    spec.format = SDL_AUDIO_S16;
-    spec.channels = 2;
-    spec.freq = outRate;
+    spec.format = FFmpeg_to_SDL_Audio_Format(codec_context->sample_fmt);
+    spec.channels = codec_context->ch_layout.nb_channels;
+    spec.freq = codec_context->sample_rate;
 
     device = SDL_OpenAudioDevice(
         SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK,
@@ -89,11 +67,112 @@ Playback::Playback(const char *filename) {
 
     SDL_PauseAudioDevice(device);
 
+    dur_seconds = FFmpeg_to_SDL();
+
+    SDL_SetAudioStreamGetCallback(stream, GetDataCallback, &track_pos_seconds);
+}
+
+Playback::~Playback() {
+    SDL_DestroyAudioStream(stream);
+
+    SDL_CloseAudioDevice(device);
+
+    avcodec_free_context(&codec_context);
+
+    avformat_close_input(&format_context);
+}
+
+void Playback::Pause() const {
+    SDL_PauseAudioDevice(device);
+}
+
+void Playback::Play() const {
+    SDL_ResumeAudioDevice(device);
+}
+
+void Playback::Restart() {
+    Seek(0);
+    track_pos_seconds = 0;
+    progressed_bytes = 0;
+}
+
+void Playback::Jump(int seconds) {
+    if (track_pos_seconds + seconds <= 0) {
+        Restart();
+        return;
+    }
+
+    if (track_pos_seconds + seconds > dur_seconds) {
+        seconds = dur_seconds - track_pos_seconds; // TODO Implement track ending
+    }
+
+    Seek(track_pos_seconds + seconds);
+    track_pos_seconds += seconds;
+    progressed_bytes += static_cast<int>(seconds * (spec.freq * SDL_AUDIO_BYTESIZE(spec.format) * spec.channels));
+}
+
+void Playback::Seek(const long long timestamp) const {
+    av_seek_frame(format_context, -1, timestamp * AV_TIME_BASE, AVSEEK_FLAG_BACKWARD);
+    SDL_ClearAudioStream(stream);
+    FFmpeg_to_SDL(); // NOLINT
+}
+
+int Playback::GetRawTrackLength() const {
+    return dur_seconds;
+}
+
+std::string Playback::GetTrackLength() const {
+    const int min = dur_seconds / 60;
+    const int sec = dur_seconds - (min * 60);
+
+    if (sec < 10) {
+        return std::to_string(min) + ":0" + std::to_string(sec);
+    }
+
+    return std::to_string(min) + ":" + std::to_string(sec);
+}
+
+int Playback::GetRawPlaybackPosition() const {
+    return track_pos_seconds;
+}
+
+std::string Playback::GetPlaybackPosition() const {
+    const int min = track_pos_seconds / 60;
+    const int sec = track_pos_seconds - (min * 60);
+
+    if (sec < 10) {
+        return std::to_string(min) + ":0" + std::to_string(sec);
+    }
+
+    return std::to_string(min) + ":" + std::to_string(sec);
+}
+
+int Playback::FFmpeg_to_SDL() const {
+    SwrContext *swr = nullptr;
+
+    swr_alloc_set_opts2(
+        &swr,
+
+        &codec_context->ch_layout,
+        Planar_to_Packed(codec_context->sample_fmt),
+        codec_context->sample_rate,
+
+        &codec_context->ch_layout,
+        codec_context->sample_fmt,
+        codec_context->sample_rate,
+
+        0,
+        nullptr
+    );
+
+    swr_init(swr);
+
+    long long int total_bytes = 0;
     AVPacket *pkt = av_packet_alloc();
     AVFrame *frame = av_frame_alloc();
 
     while (av_read_frame(format_context, pkt) >= 0) {
-        if (pkt->stream_index != audioStream) {
+        if (pkt->stream_index != streamIndex) {
             av_packet_unref(pkt);
             continue;
         }
@@ -104,23 +183,21 @@ Playback::Playback(const char *filename) {
         }
 
         while (avcodec_receive_frame(codec_context, frame) == 0) {
-            // Number of output samples
             const int64_t outSamples = av_rescale_rnd(
                 swr_get_delay(swr, codec_context->sample_rate) + frame->nb_samples,
-                outRate,
+                codec_context->sample_rate,
                 codec_context->sample_rate,
                 AV_ROUND_UP
             );
 
-            uint8_t *outBuffer;
-            int outLineSize = 0;
+            uint8_t *outBuffer = nullptr;
 
             av_samples_alloc(
                 &outBuffer,
-                &outLineSize,
-                2,
+                nullptr,
+                spec.channels,
                 static_cast<int>(outSamples),
-                AV_SAMPLE_FMT_S16,
+                Planar_to_Packed(codec_context->sample_fmt),
                 0
             );
 
@@ -134,17 +211,19 @@ Playback::Playback(const char *filename) {
 
             const int bytes = av_samples_get_buffer_size(
                 nullptr,
-                2,
+                spec.channels,
                 samples,
-                AV_SAMPLE_FMT_S16,
+                Planar_to_Packed(codec_context->sample_fmt),
                 1
             );
 
-            // Push PCM to SDL3 stream
+            total_bytes += bytes;
+
             if (!SDL_PutAudioStreamData(stream, outBuffer, bytes)) {
                 std::cerr << "SDL_PutAudioStreamData failed: " << SDL_GetError() << "\n";
             }
             av_freep(&outBuffer);
+            av_frame_unref(frame);
         }
 
         av_packet_unref(pkt);
@@ -152,24 +231,86 @@ Playback::Playback(const char *filename) {
 
     av_frame_free(&frame);
     av_packet_free(&pkt);
-}
-
-Playback::~Playback() {
-    SDL_DestroyAudioStream(stream);
-
-    SDL_CloseAudioDevice(device);
 
     swr_free(&swr);
 
-    avcodec_free_context(&codec_context);
-
-    avformat_close_input(&format_context);
+    return static_cast<int>(total_bytes / (spec.freq * SDL_AUDIO_BYTESIZE(spec.format) * spec.channels));
 }
 
-void Playback::Pause() const {
-    SDL_PauseAudioDevice(device);
+AVSampleFormat Playback::Planar_to_Packed(const AVSampleFormat fmt) {
+    switch (fmt)
+    {
+        case AV_SAMPLE_FMT_U8:
+        case AV_SAMPLE_FMT_U8P:
+            return AV_SAMPLE_FMT_U8;
+
+        case AV_SAMPLE_FMT_S16:
+        case AV_SAMPLE_FMT_S16P:
+            return AV_SAMPLE_FMT_S16;
+
+        case AV_SAMPLE_FMT_S32:
+        case AV_SAMPLE_FMT_S32P:
+            return AV_SAMPLE_FMT_S32;
+
+        case AV_SAMPLE_FMT_FLT:
+        case AV_SAMPLE_FMT_FLTP:
+            return AV_SAMPLE_FMT_FLT;
+        case AV_SAMPLE_FMT_DBL:
+        case AV_SAMPLE_FMT_DBLP:
+            return AV_SAMPLE_FMT_DBL;
+
+        case AV_SAMPLE_FMT_S64:
+        case AV_SAMPLE_FMT_S64P:
+            return AV_SAMPLE_FMT_S64;
+
+        case AV_SAMPLE_FMT_NONE:
+            return AV_SAMPLE_FMT_NONE;
+        case AV_SAMPLE_FMT_NB:
+            return AV_SAMPLE_FMT_NB;
+        default:
+            return AV_SAMPLE_FMT_NONE;
+    }
 }
 
-void Playback::Resume() const {
-    SDL_ResumeAudioDevice(device);
+SDL_AudioFormat Playback::FFmpeg_to_SDL_Audio_Format(const AVSampleFormat fmt)
+{
+    switch (fmt)
+    {
+        case AV_SAMPLE_FMT_U8:
+        case AV_SAMPLE_FMT_U8P:
+            return SDL_AUDIO_U8;
+
+        case AV_SAMPLE_FMT_S16:
+        case AV_SAMPLE_FMT_S16P:
+            return SDL_AUDIO_S16;
+
+        case AV_SAMPLE_FMT_S32:
+        case AV_SAMPLE_FMT_S32P:
+            return SDL_AUDIO_S32;
+
+        case AV_SAMPLE_FMT_FLT:
+        case AV_SAMPLE_FMT_FLTP:
+        case AV_SAMPLE_FMT_DBL:
+        case AV_SAMPLE_FMT_DBLP:
+            return SDL_AUDIO_F32;
+
+        case AV_SAMPLE_FMT_S64:
+        case AV_SAMPLE_FMT_S64P:
+            return SDL_AUDIO_S32;
+
+        case AV_SAMPLE_FMT_NONE:
+        case AV_SAMPLE_FMT_NB:
+        default:
+            return SDL_AUDIO_UNKNOWN;
+    }
+}
+
+void GetDataCallback(void *userdata, SDL_AudioStream *stream, int additional_amount, const int total_amount) {
+    progressed_bytes += total_amount;
+
+    SDL_AudioSpec spec;
+    SDL_GetAudioStreamFormat(stream, nullptr, &spec);
+
+    auto *output = static_cast<int *>(userdata);
+    *output = static_cast<int>(progressed_bytes / (spec.freq * SDL_AUDIO_BYTESIZE(spec.format))); // TODO This is inconsistent
 }

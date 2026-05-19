@@ -26,13 +26,12 @@ int main(int argc, char* argv[]) {
     bool quit = false;
     SDL_Event event;
 
-    // const auto *playback = new Playback("./Love & Money.m4a");
-    const auto *playback = new Playback("./Heartbeat.wav");
+    auto *playback = new Playback("./Love & Money.m4a");
+    // auto *playback = new Playback("./Heartbeat.wav");
 
-    // const std::string playback_length = playback->GetFormattedTrackLength();
+    const std::string playback_length = playback->GetTrackLength();
 
     bool paused = true;
-    bool first = true;
     bool debounce = false;
 
     while (!quit) {
@@ -41,37 +40,27 @@ int main(int argc, char* argv[]) {
                 debounce = true;
                 if (paused) {
                     paused = false;
-                    // if (first) {
-                    //     playback->Play();
-                    //     first = false;
-                    // } else {
-                        playback->Resume();
-                    // }
+                    playback->Play();
                 } else {
                     paused = true;
                     playback->Pause();
                 }
             }
-        // } else if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_ESCAPE]) {
-        //     if (!debounce) {
-        //         debounce = true;
-        //         playback->Restart();
-        //     }
-        // } else if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_RIGHT]) {
-        //     if (!debounce) {
-        //         debounce = true;
-        //         playback->JumpTo(playback->GetPlaybackPosition() + 5);
-        //     }
-        // } else if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_LEFT]) {
-        //     if (!debounce) {
-        //         debounce = true;
-        //         playback->JumpTo(playback->GetPlaybackPosition() - 5);
-        //     }
-        // } else if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_RETURN]) {
-        //     if (!debounce) {
-        //         debounce = true;
-        //         playback->FFMPEG_TEST("./Love & Money.m4a");
-        //     }
+        } else if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_ESCAPE]) {
+            if (!debounce) {
+                debounce = true;
+                playback->Restart();
+            }
+        } else if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_RIGHT]) {
+            if (!debounce) {
+                debounce = true;
+                playback->Jump(5);
+            }
+        } else if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_LEFT]) {
+            if (!debounce) {
+                debounce = true;
+                playback->Jump(-5);
+            }
         } else {
             debounce = false;
         }
@@ -86,14 +75,13 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        // std::string track_progress = playback->GetFormattedPlaybackPosition();
-        //
-        // SDL_SetWindowTitle(window, track_progress.append("/").append(playback_length).c_str());
-        //
-        // if (playback->GetPlaybackPosition() >= playback->GetTrackLength()) {
-        //     playback->Stop();
-        //     first = true;
-        // }
+        std::string track_progress = playback->GetPlaybackPosition();
+
+        SDL_SetWindowTitle(window, track_progress.append("/").append(playback_length).c_str());
+
+        if (playback->GetRawPlaybackPosition() >= playback->GetRawTrackLength()) { // TODO Implement track ending
+            playback->Pause();
+        }
     }
 
     delete playback;
