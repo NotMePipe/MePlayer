@@ -1,18 +1,19 @@
 #ifndef Playback_H
 #define Playback_H
 
+#include <string>
+
 #include <SDL3/SDL_audio.h>
 
 extern "C" {
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
-#include <libswresample/swresample.h>
 }
 
-class Playback {
+class Track {
 public:
-    explicit Playback(const char *filename);
-    ~Playback();
+    explicit Track(const char *filename);
+    ~Track();
 
     void Play() const;
     void Pause() const;
@@ -40,9 +41,9 @@ private:
     AVFormatContext *format_context = nullptr;
     AVCodecContext *codec_context;
 
-    int FFmpeg_to_SDL() const;
+    int FFmpeg_to_SDL() const; //NOLINT
 
-    static AVSampleFormat Planar_to_Packed(const AVSampleFormat fmt);
+    static AVSampleFormat Planar_to_Packed(AVSampleFormat fmt);
     static SDL_AudioFormat FFmpeg_to_SDL_Audio_Format(AVSampleFormat fmt);
 };
 

@@ -1,12 +1,18 @@
 #include <iostream>
 
-#include "Playback.h"
+extern "C" {
+#include <libswresample/swresample.h>
+}
+
+#include "Track.h"
+
+const SDL_AudioSpec *spec_ref; // I feel very strongly that this is stupid
 
 int progressed_bytes = 0;
 
 void GetDataCallback(void *userdata, SDL_AudioStream *stream, int additional_amount, int total_amount);
 
-Playback::Playback(const char *filename) {
+Track::Track(const char *filename) {
     if (avformat_open_input(&format_context, filename, nullptr, nullptr) < 0) {
         std::cout << "failed to open\n";
         return;
@@ -72,7 +78,9 @@ Playback::Playback(const char *filename) {
     SDL_SetAudioStreamGetCallback(stream, GetDataCallback, &track_pos_seconds);
 }
 
-Playback::~Playback() {
+Track::~Track() {
+    SDL_UnbindAudioStream(stream);
+
     SDL_DestroyAudioStream(stream);
 
     SDL_CloseAudioDevice(device);
@@ -82,21 +90,21 @@ Playback::~Playback() {
     avformat_close_input(&format_context);
 }
 
-void Playback::Pause() const {
+void Track::Pause() const {
     SDL_PauseAudioDevice(device);
 }
 
-void Playback::Play() const {
+void Track::Play() const {
     SDL_ResumeAudioDevice(device);
 }
 
-void Playback::Restart() {
+void Track::Restart() {
     Seek(0);
     track_pos_seconds = 0;
     progressed_bytes = 0;
 }
 
-void Playback::Jump(int seconds) {
+void Track::Jump(int seconds) {
     if (track_pos_seconds + seconds <= 0) {
         Restart();
         return;
@@ -111,17 +119,17 @@ void Playback::Jump(int seconds) {
     progressed_bytes += static_cast<int>(seconds * (spec.freq * SDL_AUDIO_BYTESIZE(spec.format) * spec.channels));
 }
 
-void Playback::Seek(const long long timestamp) const {
+void Track::Seek(const long long timestamp) const {
     av_seek_frame(format_context, -1, timestamp * AV_TIME_BASE, AVSEEK_FLAG_BACKWARD);
     SDL_ClearAudioStream(stream);
     FFmpeg_to_SDL(); // NOLINT
 }
 
-int Playback::GetRawTrackLength() const {
+int Track::GetRawTrackLength() const {
     return dur_seconds;
 }
 
-std::string Playback::GetTrackLength() const {
+std::string Track::GetTrackLength() const {
     const int min = dur_seconds / 60;
     const int sec = dur_seconds - (min * 60);
 
@@ -132,11 +140,11 @@ std::string Playback::GetTrackLength() const {
     return std::to_string(min) + ":" + std::to_string(sec);
 }
 
-int Playback::GetRawPlaybackPosition() const {
+int Track::GetRawPlaybackPosition() const {
     return track_pos_seconds;
 }
 
-std::string Playback::GetPlaybackPosition() const {
+std::string Track::GetPlaybackPosition() const {
     const int min = track_pos_seconds / 60;
     const int sec = track_pos_seconds - (min * 60);
 
@@ -147,14 +155,16 @@ std::string Playback::GetPlaybackPosition() const {
     return std::to_string(min) + ":" + std::to_string(sec);
 }
 
-int Playback::FFmpeg_to_SDL() const {
+int Track::FFmpeg_to_SDL() const {
     SwrContext *swr = nullptr;
+
+    const AVSampleFormat packed_format = Planar_to_Packed(codec_context->sample_fmt);
 
     swr_alloc_set_opts2(
         &swr,
 
         &codec_context->ch_layout,
-        Planar_to_Packed(codec_context->sample_fmt),
+        packed_format,
         codec_context->sample_rate,
 
         &codec_context->ch_layout,
@@ -197,7 +207,7 @@ int Playback::FFmpeg_to_SDL() const {
                 nullptr,
                 spec.channels,
                 static_cast<int>(outSamples),
-                Planar_to_Packed(codec_context->sample_fmt),
+                packed_format,
                 0
             );
 
@@ -213,7 +223,7 @@ int Playback::FFmpeg_to_SDL() const {
                 nullptr,
                 spec.channels,
                 samples,
-                Planar_to_Packed(codec_context->sample_fmt),
+                packed_format,
                 1
             );
 
@@ -234,10 +244,12 @@ int Playback::FFmpeg_to_SDL() const {
 
     swr_free(&swr);
 
+    spec_ref = &spec;
+
     return static_cast<int>(total_bytes / (spec.freq * SDL_AUDIO_BYTESIZE(spec.format) * spec.channels));
 }
 
-AVSampleFormat Playback::Planar_to_Packed(const AVSampleFormat fmt) {
+AVSampleFormat Track::Planar_to_Packed(const AVSampleFormat fmt) {
     switch (fmt)
     {
         case AV_SAMPLE_FMT_U8:
@@ -272,7 +284,7 @@ AVSampleFormat Playback::Planar_to_Packed(const AVSampleFormat fmt) {
     }
 }
 
-SDL_AudioFormat Playback::FFmpeg_to_SDL_Audio_Format(const AVSampleFormat fmt)
+SDL_AudioFormat Track::FFmpeg_to_SDL_Audio_Format(const AVSampleFormat fmt)
 {
     switch (fmt)
     {
@@ -308,9 +320,7 @@ SDL_AudioFormat Playback::FFmpeg_to_SDL_Audio_Format(const AVSampleFormat fmt)
 void GetDataCallback(void *userdata, SDL_AudioStream *stream, int additional_amount, const int total_amount) {
     progressed_bytes += total_amount;
 
-    SDL_AudioSpec spec;
-    SDL_GetAudioStreamFormat(stream, nullptr, &spec);
-
     auto *output = static_cast<int *>(userdata);
-    *output = static_cast<int>(progressed_bytes / (spec.freq * SDL_AUDIO_BYTESIZE(spec.format))); // TODO This is inconsistent
+
+    *output = static_cast<int>(progressed_bytes / (spec_ref->freq * 2 * SDL_AUDIO_BYTESIZE(spec_ref->format)));
 }

@@ -5,8 +5,8 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_executable(${PROJECT_NAME}
         src/main.cpp
-        src/Playback.cpp
-        include/Playback.h
+        src/Track.cpp
+        include/Track.h
 )
 
 include(FetchContent)

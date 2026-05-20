@@ -3,7 +3,7 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
-#include "Playback.h"
+#include "Track.h"
 
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
@@ -26,8 +26,8 @@ int main(int argc, char* argv[]) {
     bool quit = false;
     SDL_Event event;
 
-    auto *playback = new Playback("./Love & Money.m4a");
-    // auto *playback = new Playback("./Heartbeat.wav");
+    auto *playback = new Track("./Love & Money.m4a");
+    // auto *playback = new Track("./Heartbeat.wav");
 
     const std::string playback_length = playback->GetTrackLength();
 
