@@ -7,6 +7,8 @@ add_executable(${PROJECT_NAME}
         src/main.cpp
         src/Track.cpp
         include/Track.h
+        src/PlaybackQueue.cpp
+        include/PlaybackQueue.h
 )
 
 include(FetchContent)

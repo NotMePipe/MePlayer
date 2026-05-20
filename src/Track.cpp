@@ -1,18 +1,22 @@
+#include "Track.h"
+
 #include <iostream>
 
 extern "C" {
 #include <libswresample/swresample.h>
 }
 
-#include "Track.h"
-
 const SDL_AudioSpec *spec_ref; // I feel very strongly that this is stupid
 
-int progressed_bytes = 0;
+int progressed_bytes;
 
+AVSampleFormat Planar_to_Packed(AVSampleFormat fmt);
+SDL_AudioFormat FFmpeg_to_SDL_Audio_Format(AVSampleFormat fmt);
 void GetDataCallback(void *userdata, SDL_AudioStream *stream, int additional_amount, int total_amount);
 
 Track::Track(const char *filename) {
+    progressed_bytes = 0;
+
     if (avformat_open_input(&format_context, filename, nullptr, nullptr) < 0) {
         std::cout << "failed to open\n";
         return;
@@ -71,7 +75,7 @@ Track::Track(const char *filename) {
 
     SDL_BindAudioStream(device, stream);
 
-    SDL_PauseAudioDevice(device);
+    Pause();
 
     dur_seconds = FFmpeg_to_SDL();
 
@@ -90,11 +94,13 @@ Track::~Track() {
     avformat_close_input(&format_context);
 }
 
-void Track::Pause() const {
+void Track::Pause() {
+    paused = true;
     SDL_PauseAudioDevice(device);
 }
 
-void Track::Play() const {
+void Track::Play() {
+    paused = false;
     SDL_ResumeAudioDevice(device);
 }
 
@@ -129,30 +135,30 @@ int Track::GetRawTrackLength() const {
     return dur_seconds;
 }
 
-std::string Track::GetTrackLength() const {
+const char *Track::GetTrackLength() const {
     const int min = dur_seconds / 60;
     const int sec = dur_seconds - (min * 60);
 
     if (sec < 10) {
-        return std::to_string(min) + ":0" + std::to_string(sec);
+        return (std::to_string(min) + ":0" + std::to_string(sec)).c_str();
     }
 
-    return std::to_string(min) + ":" + std::to_string(sec);
+    return (std::to_string(min) + ":" + std::to_string(sec)).c_str();
 }
 
 int Track::GetRawPlaybackPosition() const {
     return track_pos_seconds;
 }
 
-std::string Track::GetPlaybackPosition() const {
+const char *Track::GetPlaybackPosition() const {
     const int min = track_pos_seconds / 60;
     const int sec = track_pos_seconds - (min * 60);
 
     if (sec < 10) {
-        return std::to_string(min) + ":0" + std::to_string(sec);
+        return (std::to_string(min) + ":0" + std::to_string(sec)).c_str();
     }
 
-    return std::to_string(min) + ":" + std::to_string(sec);
+    return (std::to_string(min) + ":" + std::to_string(sec)).c_str();
 }
 
 int Track::FFmpeg_to_SDL() const {
@@ -249,9 +255,17 @@ int Track::FFmpeg_to_SDL() const {
     return static_cast<int>(total_bytes / (spec.freq * SDL_AUDIO_BYTESIZE(spec.format) * spec.channels));
 }
 
-AVSampleFormat Track::Planar_to_Packed(const AVSampleFormat fmt) {
-    switch (fmt)
-    {
+bool Track::IsPaused() const {
+    return paused;
+}
+
+
+bool Track::TrackEnded() const {
+    return track_pos_seconds >= dur_seconds;
+}
+
+AVSampleFormat Planar_to_Packed(const AVSampleFormat fmt) {
+    switch (fmt) {
         case AV_SAMPLE_FMT_U8:
         case AV_SAMPLE_FMT_U8P:
             return AV_SAMPLE_FMT_U8;
@@ -284,10 +298,8 @@ AVSampleFormat Track::Planar_to_Packed(const AVSampleFormat fmt) {
     }
 }
 
-SDL_AudioFormat Track::FFmpeg_to_SDL_Audio_Format(const AVSampleFormat fmt)
-{
-    switch (fmt)
-    {
+SDL_AudioFormat FFmpeg_to_SDL_Audio_Format(const AVSampleFormat fmt) {
+    switch (fmt) {
         case AV_SAMPLE_FMT_U8:
         case AV_SAMPLE_FMT_U8P:
             return SDL_AUDIO_U8;

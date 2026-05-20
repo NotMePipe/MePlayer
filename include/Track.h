@@ -1,8 +1,6 @@
 #ifndef Playback_H
 #define Playback_H
 
-#include <string>
-
 #include <SDL3/SDL_audio.h>
 
 extern "C" {
@@ -15,23 +13,28 @@ public:
     explicit Track(const char *filename);
     ~Track();
 
-    void Play() const;
-    void Pause() const;
+    void Play();
+    void Pause();
     void Restart();
 
     void Jump(int seconds);
     void Seek(long long timestamp) const;
 
     [[nodiscard]] int GetRawTrackLength() const;
-    [[nodiscard]] std::string GetTrackLength() const;
+    [[nodiscard]] const char *GetTrackLength() const;
 
     [[nodiscard]] int GetRawPlaybackPosition() const;
-    [[nodiscard]] std::string GetPlaybackPosition() const;
+    [[nodiscard]] const char *GetPlaybackPosition() const;
+
+    bool IsPaused() const;
+    bool TrackEnded() const;
 private:
     int streamIndex = -1;
 
     int dur_seconds = 0;
     int track_pos_seconds = 0;
+
+    bool paused;
 
     SDL_AudioSpec spec{};
 
@@ -42,9 +45,6 @@ private:
     AVCodecContext *codec_context;
 
     int FFmpeg_to_SDL() const; //NOLINT
-
-    static AVSampleFormat Planar_to_Packed(AVSampleFormat fmt);
-    static SDL_AudioFormat FFmpeg_to_SDL_Audio_Format(AVSampleFormat fmt);
 };
 
 #endif //Playback_H

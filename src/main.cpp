@@ -3,6 +3,7 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
+#include "PlaybackQueue.h"
 #include "Track.h"
 
 #define SCREEN_WIDTH 640
@@ -26,23 +27,22 @@ int main(int argc, char* argv[]) {
     bool quit = false;
     SDL_Event event;
 
-    auto *playback = new Track("./Love & Money.m4a");
-    // auto *playback = new Track("./Heartbeat.wav");
+    auto *queue = PlaybackQueue::GetPlaybackQueue();
+    queue->Enqueue("Heartbeat.wav");
+    queue->Enqueue("Love & Money.m4a");
 
-    const std::string playback_length = playback->GetTrackLength();
+    Track *playback;
+    queue->Play(&playback, 0);
 
-    bool paused = true;
     bool debounce = false;
 
     while (!quit) {
         if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_SPACE]) {
             if (!debounce) {
                 debounce = true;
-                if (paused) {
-                    paused = false;
+                if (playback->IsPaused()) {
                     playback->Play();
                 } else {
-                    paused = true;
                     playback->Pause();
                 }
             }
@@ -61,6 +61,29 @@ int main(int argc, char* argv[]) {
                 debounce = true;
                 playback->Jump(-5);
             }
+        } else if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_RETURN]) {
+            if (!debounce) {
+                debounce = true;
+                playback->Jump(60);
+            }
+        } else if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_BACKSPACE]) {
+            if (!debounce) {
+                debounce = true;
+                if (queue->Repeat() < 0) {
+                    queue->Repeat(static_cast<unsigned int>(queue->GetCurrentIndex()));
+                } else {
+                    queue->Repeat(false);
+                }
+            }
+        } else if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_DELETE]) {
+            if (!debounce) {
+                debounce = true;
+                if (queue->Repeat() > -2) {
+                    queue->Repeat(true);
+                } else {
+                    queue->Repeat(false);
+                }
+            }
         } else {
             debounce = false;
         }
@@ -76,15 +99,16 @@ int main(int argc, char* argv[]) {
         }
 
         std::string track_progress = playback->GetPlaybackPosition();
+        std::string playback_length = playback->GetTrackLength();
 
         SDL_SetWindowTitle(window, track_progress.append("/").append(playback_length).c_str());
 
-        if (playback->GetRawPlaybackPosition() >= playback->GetRawTrackLength()) { // TODO Implement track ending
-            playback->Pause();
+        if (playback->TrackEnded()) {
+            if (queue->Next(&playback) < 0) { // TODO Remove/reimplement temporary crash prevention
+                quit = true;
+            }
         }
     }
-
-    delete playback;
 
     SDL_DestroyWindow(window);
 
