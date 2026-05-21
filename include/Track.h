@@ -26,8 +26,8 @@ public:
     [[nodiscard]] int GetRawPlaybackPosition() const;
     [[nodiscard]] const char *GetPlaybackPosition() const;
 
-    bool IsPaused() const;
-    bool TrackEnded() const;
+    [[nodiscard]] bool IsPaused() const;
+    [[nodiscard]] bool TrackEnded() const;
 private:
     int streamIndex = -1;
 

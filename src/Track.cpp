@@ -16,6 +16,7 @@ void GetDataCallback(void *userdata, SDL_AudioStream *stream, int additional_amo
 
 Track::Track(const char *filename) {
     progressed_bytes = 0;
+    paused = true;
 
     if (avformat_open_input(&format_context, filename, nullptr, nullptr) < 0) {
         std::cout << "failed to open\n";
@@ -334,5 +335,5 @@ void GetDataCallback(void *userdata, SDL_AudioStream *stream, int additional_amo
 
     auto *output = static_cast<int *>(userdata);
 
-    *output = static_cast<int>(progressed_bytes / (spec_ref->freq * 2 * SDL_AUDIO_BYTESIZE(spec_ref->format)));
+    *output = static_cast<int>(progressed_bytes / (spec_ref->freq * spec_ref->channels * SDL_AUDIO_BYTESIZE(spec_ref->format)));
 }
