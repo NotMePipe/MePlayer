@@ -7,13 +7,14 @@ A lightweight music player
 - [x] Version 2
   - [x] FFmpeg decoding pipeline
   - [x] proper audio buffering
-- [ ] Version 3
-  - [ ] metadata extraction
+- [x] Version 3
+  - [x] metadata extraction
 - [ ] Version 4
   - [ ] library scanning
 - [ ] Version 5
   - [ ] album grouping
 - [ ] Version 6
+  - [ ] Proper graphics architecture
   - [ ] UI polish
 - [ ] Version 7
   - [ ] playlists

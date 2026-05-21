@@ -12,14 +12,23 @@
 int main(int argc, char* argv[]) {
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS))
     {
-        std::cerr << "Failed to initialize SDL: " << SDL_GetError() << std::endl;
+        std::cerr << "Failed to initialize SDL: " << SDL_GetError() << "\n";
         return -1;
     }
 
     SDL_Window *window = SDL_CreateWindow("MePlayer", SCREEN_WIDTH, SCREEN_HEIGHT, 0);
     if (!window)
     {
-        std::cout << "Failed to create SDL window: " << SDL_GetError() << std::endl;
+        std::cerr << "Failed to create SDL window: " << SDL_GetError() << "\n";
+        SDL_Quit();
+        return -1;
+    }
+
+    SDL_Renderer *renderer = SDL_CreateRenderer(window, nullptr);
+    if (!renderer)
+    {
+        std::cerr << "Failed to create SDL renderer: " << SDL_GetError() << "\n";
+        SDL_DestroyWindow(window);
         SDL_Quit();
         return -1;
     }
@@ -30,11 +39,16 @@ int main(int argc, char* argv[]) {
     auto *queue = PlaybackQueue::GetPlaybackQueue();
     queue->Enqueue("Heartbeat.wav");
     queue->Enqueue("Love & Money.m4a");
+    queue->Enqueue("Heartbeat.wav");
+    queue->Enqueue("Love & Money.m4a");
+    queue->Enqueue("Heartbeat.wav");
 
     Track *playback;
     queue->Play(&playback, 0);
 
     bool debounce = false;
+
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, playback->CoverArt());
 
     while (!quit) {
         if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_SPACE]) {
@@ -98,20 +112,38 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        std::string track_progress = playback->GetPlaybackPosition();
-        std::string playback_length = playback->GetTrackLength();
-
-        SDL_SetWindowTitle(window, track_progress.append("/").append(playback_length).c_str());
-
         if (playback->TrackEnded()) {
             if (queue->Next(&playback) < 0) { // TODO Remove/reimplement temporary crash prevention
-                quit = true;
+                break;
             }
+            SDL_DestroyTexture(texture);
+            texture = SDL_CreateTextureFromSurface(renderer, playback->CoverArt());
         }
+
+        std::string windowTitle = std::string(playback->Title())
+                                    .append(" (")
+                                    .append(playback->Artist())
+                                    .append(") : ")
+                                    .append(playback->GetPlaybackPosition())
+                                    .append("/")
+                                    .append(playback->GetTrackLength());
+
+        SDL_SetWindowTitle(window, windowTitle.c_str());
+
+        SDL_RenderClear(renderer);
+
+        SDL_FRect dst = {(SCREEN_WIDTH / 2) - 150, (SCREEN_HEIGHT / 2) - 150, 300, 300};
+
+        SDL_RenderTexture(renderer, texture, nullptr, &dst);
+
+        SDL_RenderPresent(renderer);
     }
 
     PlaybackQueue::Close();
 
+    SDL_DestroyTexture(texture);
+
+    SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
 
     SDL_Quit();

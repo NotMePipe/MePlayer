@@ -2,6 +2,7 @@
 #define Playback_H
 
 #include <SDL3/SDL_audio.h>
+#include "SDL3/SDL_render.h"
 
 extern "C" {
 #include <libavformat/avformat.h>
@@ -28,6 +29,14 @@ public:
 
     [[nodiscard]] bool IsPaused() const;
     [[nodiscard]] bool TrackEnded() const;
+
+    [[nodiscard]] const char *Artist() const;
+    [[nodiscard]] const char *Title() const;
+    [[nodiscard]] const char *Album() const;
+    [[nodiscard]] const char *AlbumArtist() const;
+    [[nodiscard]] const char *Genre() const;
+
+    [[nodiscard]] SDL_Surface *CoverArt() const;
 private:
     int streamIndex = -1;
 
@@ -44,7 +53,11 @@ private:
     AVFormatContext *format_context = nullptr;
     AVCodecContext *codec_context;
 
+    SDL_Surface *coverArt = nullptr;
+
     int FFmpeg_to_SDL() const; //NOLINT
+
+    bool LoadCoverArt();
 };
 
 #endif //Playback_H

@@ -1,6 +1,9 @@
 #include "Track.h"
 
+#include <fstream>
 #include <iostream>
+
+#include <SDL3_image/SDL_image.h>
 
 extern "C" {
 #include <libswresample/swresample.h>
@@ -81,9 +84,15 @@ Track::Track(const char *filename) {
     dur_seconds = FFmpeg_to_SDL();
 
     SDL_SetAudioStreamGetCallback(stream, GetDataCallback, &track_pos_seconds);
+
+    if (!LoadCoverArt()) {
+        std::cout << "Cover art not found for " << filename << "\n";
+    }
 }
 
 Track::~Track() {
+    SDL_DestroySurface(coverArt);
+
     SDL_UnbindAudioStream(stream);
 
     SDL_DestroyAudioStream(stream);
@@ -265,6 +274,44 @@ bool Track::TrackEnded() const {
     return track_pos_seconds >= dur_seconds;
 }
 
+const char *Track::Artist() const {
+    const AVDictionaryEntry *entry = av_dict_get(format_context->metadata, "artist", nullptr, 0);
+    if (entry == nullptr) {
+        return "";
+    }
+    return entry->value;}
+
+const char *Track::Title() const {
+    const AVDictionaryEntry *entry = av_dict_get(format_context->metadata, "title", nullptr, 0);
+    if (entry == nullptr) {
+        return "";
+    }
+    return entry->value;}
+
+const char *Track::Album() const {
+    const AVDictionaryEntry *entry = av_dict_get(format_context->metadata, "album", nullptr, 0);
+    if (entry == nullptr) {
+        return "";
+    }
+    return entry->value;
+}
+
+const char *Track::AlbumArtist() const { // TODO This should get moved into an album handler
+    const AVDictionaryEntry *entry = av_dict_get(format_context->metadata, "album_artist", nullptr, 0);
+    if (entry == nullptr) {
+        return "";
+    }
+    return entry->value;
+}
+
+const char *Track::Genre() const {
+    const AVDictionaryEntry *entry = av_dict_get(format_context->metadata, "genre", nullptr, 0);
+    if (entry == nullptr) {
+        return "";
+    }
+    return entry->value;
+}
+
 AVSampleFormat Planar_to_Packed(const AVSampleFormat fmt) {
     switch (fmt) {
         case AV_SAMPLE_FMT_U8:
@@ -336,4 +383,31 @@ void GetDataCallback(void *userdata, SDL_AudioStream *stream, int additional_amo
     auto *output = static_cast<int *>(userdata);
 
     *output = static_cast<int>(progressed_bytes / (spec_ref->freq * spec_ref->channels * SDL_AUDIO_BYTESIZE(spec_ref->format)));
+}
+
+SDL_Surface *Track::CoverArt() const {
+    return coverArt;
+}
+
+bool Track::LoadCoverArt() {
+    if (coverArt != nullptr) {
+        return true;
+    }
+
+    bool foundArt = false;
+    for (unsigned int i = 0; i < format_context->nb_streams; ++i) {
+        if (const AVStream *s = format_context->streams[i]; s->disposition & AV_DISPOSITION_ATTACHED_PIC) {
+            const AVPacket pic = s->attached_pic;
+
+            coverArt = IMG_Load_IO(SDL_IOFromConstMem(
+                pic.data,
+                pic.size
+            ), true);
+
+            foundArt = true;
+            break;
+        }
+    }
+
+    return foundArt;
 }
