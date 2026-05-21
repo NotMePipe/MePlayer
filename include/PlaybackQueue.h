@@ -13,11 +13,11 @@ public:
     int Play(Track **track, unsigned int index);
     int Next(Track **track);
 
-    int GetCurrentIndex() const;
+    [[nodiscard]] int GetCurrentIndex() const;
 
     void Enqueue(const char *filename);
 
-    int Repeat() const;
+    [[nodiscard]] int Repeat() const;
     void Repeat(bool toggle);
     void Repeat(unsigned int index);
 private:
