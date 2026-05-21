@@ -110,6 +110,8 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    PlaybackQueue::Close();
+
     SDL_DestroyWindow(window);
 
     SDL_Quit();
