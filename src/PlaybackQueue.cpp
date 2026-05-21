@@ -23,6 +23,11 @@ PlaybackQueue::PlaybackQueue() {
 }
 
 PlaybackQueue::~PlaybackQueue() {
+    if (currentTrack != nullptr) {
+        delete currentTrack;
+        currentTrack = nullptr;
+    }
+
     queue.clear();
     queue.shrink_to_fit();
 }
@@ -56,7 +61,8 @@ int PlaybackQueue::Next(Track **track) {
         return Play(track, currentIndex);
     }
 
-    return Play(track, repeat);
+    (*track)->Restart();
+    return 0;
 }
 
 int PlaybackQueue::GetCurrentIndex() const {
