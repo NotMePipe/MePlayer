@@ -90,6 +90,6 @@ void PlaybackQueue::Repeat(const bool toggle) {
 
 void PlaybackQueue::Repeat(const unsigned int index) {
     if (index < queue.size()) {
-        repeat = index;
+        repeat = static_cast<int>(index);
     }
 }
