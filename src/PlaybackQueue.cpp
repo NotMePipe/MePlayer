@@ -43,7 +43,7 @@ int PlaybackQueue::Play(Track **track, const unsigned int index) {
         return -1;
     }
 
-    currentTrack = new Track(queue[index]);
+    currentTrack = new Track(queue[index].c_str());
     *track = currentTrack;
     currentTrack->Play();
     return 0;
@@ -73,7 +73,7 @@ void PlaybackQueue::Enqueue(const char *filename) {
     if (queue.size() == queue.capacity()) {
         queue.reserve(queue.capacity() * 2);
     }
-    queue.push_back(filename);
+    queue.emplace_back(filename);
 }
 
 int PlaybackQueue::Repeat() const {

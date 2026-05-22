@@ -1,6 +1,7 @@
 #ifndef PLAYBACK_QUEUE_H
 #define PLAYBACK_QUEUE_H
 
+#include <string>
 #include <vector>
 
 #include "Track.h"
@@ -26,7 +27,7 @@ private:
     PlaybackQueue();
     ~PlaybackQueue();
 
-    std::vector<const char *> queue;
+    std::vector<std::string> queue;
 
     Track *currentTrack = nullptr;
 

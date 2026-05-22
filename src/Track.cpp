@@ -22,7 +22,7 @@ Track::Track(const char *filename) {
     paused = true;
 
     if (avformat_open_input(&format_context, filename, nullptr, nullptr) < 0) {
-        std::cout << "failed to open\n";
+        std::cout << "failed to open file " << filename << "\n";
         return;
     }
 

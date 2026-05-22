@@ -9,6 +9,9 @@
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 
+void ScanLibrary(PlaybackQueue **queue, const char *path); // TODO queue should be a library, not the playback queue
+                                                           // TODO implement a library
+
 int main(int argc, char* argv[]) {
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS))
     {
@@ -37,16 +40,13 @@ int main(int argc, char* argv[]) {
     SDL_Event event;
 
     auto *queue = PlaybackQueue::GetPlaybackQueue();
-    queue->Enqueue("Heartbeat.wav");
-    queue->Enqueue("Love & Money.m4a");
-    queue->Enqueue("Heartbeat.wav");
-    queue->Enqueue("Love & Money.m4a");
-    queue->Enqueue("Heartbeat.wav");
+
+    bool debounce = false;
+
+    ScanLibrary(&queue, "Music Folder");
 
     Track *playback;
     queue->Play(&playback, 0);
-
-    bool debounce = false;
 
     SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, playback->CoverArt());
 
@@ -132,7 +132,7 @@ int main(int argc, char* argv[]) {
 
         SDL_RenderClear(renderer);
 
-        SDL_FRect dst = {(SCREEN_WIDTH / 2) - 150, (SCREEN_HEIGHT / 2) - 150, 300, 300};
+        SDL_FRect dst = {(static_cast<float>(SCREEN_WIDTH) / 2) - 150, (static_cast<float>(SCREEN_HEIGHT) / 2) - 150, 300, 300};
 
         SDL_RenderTexture(renderer, texture, nullptr, &dst);
 
@@ -149,4 +149,35 @@ int main(int argc, char* argv[]) {
     SDL_Quit();
 
     return 0;
+}
+
+void ScanLibrary(PlaybackQueue **queue, const char *path) {
+    SDL_PathInfo info;
+
+    if (!SDL_GetPathInfo(path, &info)) {
+        std::cerr << "Error in GetPathInfo: " << SDL_GetError() << " : " << path << "\n";
+        return;
+    }
+
+    if (info.type == SDL_PATHTYPE_FILE) {
+        (*queue)->Enqueue(path); // TODO This needs to be a library later (which accounts for disk and track numbers)
+        return;
+    }
+
+    if (info.type == SDL_PATHTYPE_DIRECTORY) {
+        int count = 0;
+
+        char **entries = SDL_GlobDirectory(path, nullptr, 0, &count);
+
+        if (!entries) {
+            printf("Error: %s\n", SDL_GetError());
+            return;
+        }
+
+        for (int i = 0; i < count; i++) {
+            ScanLibrary(queue, std::string(path).append("/").append(entries[i]).c_str());
+        }
+
+        SDL_free(entries);
+    }
 }
