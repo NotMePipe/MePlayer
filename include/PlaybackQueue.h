@@ -22,7 +22,7 @@ public:
     void Repeat(bool toggle);
     void Repeat(unsigned int index);
 private:
-    static PlaybackQueue *instance;
+    static PlaybackQueue *sInstance;
 
     PlaybackQueue();
     ~PlaybackQueue();

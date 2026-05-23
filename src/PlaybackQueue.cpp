@@ -1,20 +1,20 @@
 #include "PlaybackQueue.h"
 
-PlaybackQueue *PlaybackQueue::instance;
+PlaybackQueue *PlaybackQueue::sInstance;
 
 PlaybackQueue *PlaybackQueue::GetPlaybackQueue() {
-    if (instance == nullptr) {
-        instance = new PlaybackQueue();
+    if (sInstance == nullptr) {
+        sInstance = new PlaybackQueue();
     }
-    return instance;
+    return sInstance;
 }
 
 void PlaybackQueue::Close() {
-    if (instance == nullptr) {
+    if (sInstance == nullptr) {
         return;
     }
-    delete instance;
-    instance = nullptr;
+    delete sInstance;
+    sInstance = nullptr;
 }
 
 PlaybackQueue::PlaybackQueue() {
