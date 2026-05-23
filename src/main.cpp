@@ -3,6 +3,7 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
+#include "LibraryHandler.h"
 #include "PlaybackQueue.h"
 #include "Track.h"
 
@@ -14,11 +15,15 @@ void ScanLibrary(PlaybackQueue **queue, const char *path); // TODO queue should 
 
 int main(int argc, char* argv[]) {
     SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_NAME_STRING, "MePlayer");
-    SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_VERSION_STRING, "0.4.1");
+    SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_VERSION_STRING, VERSION);
     SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_IDENTIFIER_STRING, "not.mepipe.meplayer");
     SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_CREATOR_STRING, "Not MePipe");
     SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_URL_STRING, "https://github.com/NotMePipe/MePlayer");
     SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_TYPE_STRING, "mediaplayer");
+
+#ifdef NDEBUG
+    av_log_set_level(AV_LOG_QUIET);
+#endif
 
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS))
     {
@@ -50,7 +55,11 @@ int main(int argc, char* argv[]) {
 
     bool debounce = false;
 
+    LibraryHandler::GetLibraryHandler();
+    LibraryHandler::Close();
+
     ScanLibrary(&queue, "Music Folder");
+    queue->Enqueue("1-hour-and-20-minutes-of-silence.mp3");
 
     Track *playback;
     queue->Play(&playback, 0);
@@ -155,6 +164,8 @@ int main(int argc, char* argv[]) {
 
     SDL_Quit();
 
+    LibraryHandler::Close();
+
     return 0;
 }
 
@@ -167,7 +178,8 @@ void ScanLibrary(PlaybackQueue **queue, const char *path) {
     }
 
     if (info.type == SDL_PATHTYPE_FILE) {
-        (*queue)->Enqueue(path); // TODO This needs to be a library later (which accounts for disk and track numbers)
+        LibraryHandler::GetLibraryHandler()->Insert(path, false);
+        // (*queue)->Enqueue(path); // TODO This needs to be a library later (which accounts for disk and track numbers)
         return;
     }
 
@@ -180,6 +192,8 @@ void ScanLibrary(PlaybackQueue **queue, const char *path) {
             printf("Error: %s\n", SDL_GetError());
             return;
         }
+
+        LibraryHandler::GetLibraryHandler()->Insert(path, true);
 
         for (int i = 0; i < count; i++) {
             ScanLibrary(queue, std::string(path).append("/").append(entries[i]).c_str());
