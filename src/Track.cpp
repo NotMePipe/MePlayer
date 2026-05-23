@@ -22,7 +22,12 @@ Track::Track(const char *filename) {
     paused = true;
 
     if (avformat_open_input(&format_context, filename, nullptr, nullptr) < 0) {
-        std::cout << "failed to open file " << filename << "\n";
+        std::cerr << "failed to open file " << filename << "\n";
+        return;
+    }
+
+    if (avformat_find_stream_info(format_context, nullptr) < 0) {
+        std::cerr << "failed to find stream information\n";
         return;
     }
 
@@ -36,7 +41,7 @@ Track::Track(const char *filename) {
     }
 
     if (streamIndex == -1) {
-        std::cout << "no audio stream found\n";
+        std::cerr << "no audio stream found\n";
         return;
     }
 
@@ -127,7 +132,7 @@ void Track::Jump(int seconds) {
     }
 
     if (track_pos_seconds + seconds > dur_seconds) {
-        seconds = dur_seconds - track_pos_seconds; // TODO Implement track ending
+        seconds = dur_seconds - track_pos_seconds;
     }
 
     Seek(track_pos_seconds + seconds);
