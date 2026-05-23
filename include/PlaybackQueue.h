@@ -35,5 +35,4 @@ private:
     int repeat = -1;
 };
 
-
 #endif //PLAYBACK_QUEUE_H
