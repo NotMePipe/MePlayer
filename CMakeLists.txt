@@ -1,22 +1,23 @@
 cmake_minimum_required(VERSION 4.2)
-project(MePlayer VERSION 0.4.1)
+project(MePlayer VERSION 0.4.2)
 
 set(CMAKE_CXX_STANDARD 17)
 
 add_executable(${PROJECT_NAME}
         src/main.cpp
         src/Track.cpp
-        include/Track.h
         src/PlaybackQueue.cpp
-        include/PlaybackQueue.h
         src/LibraryHandler.cpp
-        include/LibraryHandler.h
         src/Button.cpp
+        src/TextButton.cpp
+        include/Track.h
+        include/PlaybackQueue.h
+        include/LibraryHandler.h
         include/Button.h
         include/TextButton.h
-        src/TextButton.cpp
 )
 
+# I feel like this probably isn't a great practice
 include(FetchContent)
 
 FetchContent_Declare(
