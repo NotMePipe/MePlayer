@@ -40,7 +40,7 @@ A lightweight music player
   - [ ] Discord RPC
   - [ ] Last.FM
 
-Assets needed:
+## Assets needed:
 - [x] Track
   - Added: 0.1.0
   - Last updated: 0.3.0
