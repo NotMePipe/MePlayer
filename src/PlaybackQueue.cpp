@@ -23,13 +23,7 @@ PlaybackQueue::PlaybackQueue() {
 }
 
 PlaybackQueue::~PlaybackQueue() {
-    if (currentTrack != nullptr) {
-        delete currentTrack;
-        currentTrack = nullptr;
-    }
-
-    queue.clear();
-    queue.shrink_to_fit();
+    Clear();
 }
 
 int PlaybackQueue::Play(Track **track, const unsigned int index) {
@@ -74,6 +68,16 @@ void PlaybackQueue::Enqueue(const char *filename) {
         queue.reserve(queue.capacity() * 2);
     }
     queue.emplace_back(filename);
+}
+
+void PlaybackQueue::Clear() {
+    if (currentTrack != nullptr) {
+        delete currentTrack;
+        currentTrack = nullptr;
+    }
+
+    queue.clear();
+    queue.shrink_to_fit();
 }
 
 int PlaybackQueue::Repeat() const {

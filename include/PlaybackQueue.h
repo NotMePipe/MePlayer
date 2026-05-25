@@ -17,6 +17,7 @@ public:
     [[nodiscard]] int GetCurrentIndex() const;
 
     void Enqueue(const char *filename);
+    void Clear();
 
     [[nodiscard]] int Repeat() const;
     void Repeat(bool toggle);

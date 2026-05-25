@@ -12,7 +12,7 @@
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 
-void ScanLibrary(PlaybackQueue **queue, const char *path); // TODO queue should be a library, not the playback queue
+void ScanLibrary(LibraryHandler **lib, const char *path); // TODO queue should be a library, not the playback queue
                                                            // TODO implement a library
 
 int main(int argc, char* argv[]) {
@@ -65,24 +65,16 @@ int main(int argc, char* argv[]) {
 
     bool debounce = false;
 
-    LibraryHandler::GetLibraryHandler();
-    LibraryHandler::Close();
+    auto *lib = LibraryHandler::GetLibraryHandler();
 
-    ScanLibrary(&queue, "Music Folder");
+    ScanLibrary(&lib, "Music Folder");
+    lib->CreateButtons(renderer);
     queue->Enqueue("1-hour-and-20-minutes-of-silence.mp3");
 
     Track *playback;
     queue->Play(&playback, 0);
 
     SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, playback->CoverArt());
-
-    auto *b = new TextButton(200, 100, 200, 50, 5, "Roboto.ttf", 50);
-    b->SetButtonColor(0, 0, 0, 0);
-    b->SetBorderColor(255, 255, 255, 255);
-    b->SetButtonHoverColor(0, 0, 0, 0);
-    b->SetBorderHoverColor(255, 0, 0, 255);
-    b->SetTextColor(255, 255, 255, 255);
-    b->SetText(renderer, "Test");
 
     while (!quit) {
         if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_SPACE]) {
@@ -114,6 +106,11 @@ int main(int argc, char* argv[]) {
                 debounce = true;
                 playback->Jump(60);
             }
+        } else if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_KP_ENTER]) {
+            if (!debounce) {
+                debounce = true;
+                playback->Jump(600);
+            }
         } else if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_BACKSPACE]) {
             if (!debounce) {
                 debounce = true;
@@ -143,11 +140,15 @@ int main(int argc, char* argv[]) {
                     quit = true;
                     break;
                 case SDL_EVENT_MOUSE_MOTION:
-                    b->Hover(event.motion.x, event.motion.y);
+                    for (const auto & button : lib->GetButtons()) {
+                        button->Hover(event.motion.x, event.motion.y);
+                    }
                     break;
                 case SDL_EVENT_MOUSE_BUTTON_DOWN:
                     if (event.button.button == SDL_BUTTON_LEFT) {
-                        b->OnClick(event.motion.x, event.motion.y);
+                        for (const auto & button : lib->GetButtons()) {
+                            button->OnClick(event.button.x, event.button.y);
+                        }
                     }
                     break;
                 default: ;
@@ -156,7 +157,7 @@ int main(int argc, char* argv[]) {
 
         if (playback->TrackEnded()) {
             if (queue->Next(&playback) < 0) { // TODO Remove/reimplement temporary crash prevention
-                break;
+                continue;
             }
             SDL_DestroyTexture(texture);
             texture = SDL_CreateTextureFromSurface(renderer, playback->CoverArt());
@@ -179,12 +180,10 @@ int main(int argc, char* argv[]) {
 
         SDL_RenderTexture(renderer, texture, nullptr, &dst);
 
-        b->Render(renderer);
+        lib->Render(renderer);
 
         SDL_RenderPresent(renderer);
     }
-
-    delete b;
 
     PlaybackQueue::Close();
 
@@ -201,7 +200,7 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-void ScanLibrary(PlaybackQueue **queue, const char *path) {
+void ScanLibrary(LibraryHandler **lib, const char *path) {
     SDL_PathInfo info;
 
     if (!SDL_GetPathInfo(path, &info)) {
@@ -210,7 +209,7 @@ void ScanLibrary(PlaybackQueue **queue, const char *path) {
     }
 
     if (info.type == SDL_PATHTYPE_FILE) {
-        LibraryHandler::GetLibraryHandler()->Insert(path, false);
+        (*lib)->Insert(path, false);
         // (*queue)->Enqueue(path); // TODO This needs to be a library later (which accounts for disk and track numbers)
         return;
     }
@@ -225,10 +224,10 @@ void ScanLibrary(PlaybackQueue **queue, const char *path) {
             return;
         }
 
-        LibraryHandler::GetLibraryHandler()->Insert(path, true);
+        // (*lib)->Insert(path, true);
 
         for (int i = 0; i < count; i++) {
-            ScanLibrary(queue, std::string(path).append("/").append(entries[i]).c_str());
+            ScanLibrary(lib, std::string(path).append("/").append(entries[i]).c_str());
         }
 
         SDL_free(entries);

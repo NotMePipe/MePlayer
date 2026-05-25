@@ -10,7 +10,21 @@ A lightweight music player
 - [x] Version 3
   - [x] metadata extraction
 - [ ] Version 4
-  - [ ] library scanning
+  - [x] library scanning (0.4.1)
+  - [ ] proper usage loop (0.4.2)
+    - [ ] open window with no audio
+    - [ ] scan library
+    - [ ] display library by track name
+    - [ ] build queue by clicking tracks
+    - [ ] access queue
+      - [ ] see queue contents
+      - [ ] remove queue contents
+      - [ ] rearrange queue contents
+    - [ ] play tracks
+    - [ ] skip tracks
+    - [ ] jump to tracks
+    - [ ] do not crash when queue ends
+      - overall: do not crash when no audio is playing
 - [ ] Version 5
   - [ ] album grouping
 - [ ] Version 6

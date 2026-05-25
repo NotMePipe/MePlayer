@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include "LibraryHandler.h"
+
 TextButton::TextButton(const float x, const float y, const float w, const float h, const float thickness, const char *font, const float textSize)
     : Button{x, y, w, h, thickness} {
     SetFont(font, textSize);
@@ -36,6 +38,8 @@ void TextButton::SetText(SDL_Renderer *renderer, const char *text) {
     }
 
     SDL_DestroySurface(surface);
+
+    textString = text;
 }
 
 void TextButton::Render(SDL_Renderer *renderer) {
@@ -46,6 +50,6 @@ void TextButton::Render(SDL_Renderer *renderer) {
 
 void TextButton::OnClick(const float x, const float y) {
     if (IsInBounds(x, y)) {
-        std::cout << "left clicked\n";
+        LibraryHandler::GetLibraryHandler()->QueueTrack(textString.c_str());
     }
 }

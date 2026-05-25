@@ -1,6 +1,8 @@
 #ifndef TEXT_BUTTON_H
 #define TEXT_BUTTON_H
 
+#include <string>
+
 #include <SDL3_ttf/SDL_ttf.h>
 
 #include "Button.h"
@@ -25,7 +27,9 @@ private:
 
     SDL_Texture *texture = nullptr;
 
-    SDL_Color textColor{0, 0, 0, 0};
+    SDL_Color textColor{255, 255, 255, 255};
+
+    std::string textString;
 };
 
 #endif //TEXT_BUTTON_H
