@@ -31,10 +31,37 @@ A lightweight music player
 - [ ] Version 5
   - [ ] album grouping
 - [ ] Version 6
-  - [ ] Proper graphics architecture
+  - [ ] proper graphics architecture
+    - [ ] application state machine
   - [ ] UI polish
 - [ ] Version 7
   - [ ] playlists
 - [ ] Version 8
   - [ ] Discord RPC
   - [ ] Last.FM
+
+Assets needed:
+- [x] Track
+  - Added: 0.1.0
+  - Last updated: 0.3.0
+- [x] Playback Queue
+  - Added: 0.2.0
+  - Last updated: 0.4.1
+- [x] Library
+  - Added: 0.4.0
+  - Last updated: 0.4.0
+- [x] Library Handler
+  - Added: 0.4.1
+  - Last updated: 0.4.2
+- [x] Button
+  - Added: 0.4.1
+  - Last updated: 0.4.1
+- [x] Text Button
+  - Added: 0.4.1
+  - Last updated: 0.4.1
+- [ ] Image Button
+  - Planned for: 0.6.0
+- [ ] Album 
+  - Added: 0.5.0
+- [ ] Scrolling Frame
+  - Added: 0.4.2
