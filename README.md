@@ -1,6 +1,8 @@
 # MePlayer
 A lightweight music player
 
+## Current version: 0.4.1
+
 - [x] Version 1
   - [x] SDL window
   - [x] play single song
@@ -19,7 +21,7 @@ A lightweight music player
     - [ ] access queue
       - [ ] see queue contents
       - [ ] remove queue contents
-      - [ ] rearrange queue contents
+      - [ ] rearrange queue contents (0.4.3)
     - [ ] play tracks
     - [ ] skip tracks
     - [ ] jump to tracks
