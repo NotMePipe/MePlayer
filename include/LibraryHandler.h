@@ -5,8 +5,6 @@
 #include <vector>
 #include <string>
 
-#include "TextButton.h"
-
 typedef struct TrackInfo {
     std::string path;
     std::string name;
@@ -19,10 +17,11 @@ public:
 
     void Insert(const char *path, bool isDirectory);
 
-    void CreateButtons(SDL_Renderer *renderer); // TODO This is a temporary function
-    void Render(SDL_Renderer *renderer) const; // TODO This is a temporary function
-    std::vector<Button *> GetButtons(); // TODO This is a temporary function
-    void QueueTrack(const char *searchName) const; // TODO This is a temporary function
+    void GenerateInfo();
+
+    std::vector<TrackInfo> GetAllInfo();
+
+    void QueueTrack(const char *searchName) const;
 
 private:
     static LibraryHandler *sInstance;
@@ -30,7 +29,6 @@ private:
     char *prefPath;
 
     std::fstream library;
-    std::vector<Button *> buttons;
     std::vector<TrackInfo> info;
 
     LibraryHandler();

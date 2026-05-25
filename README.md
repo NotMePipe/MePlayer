@@ -14,10 +14,11 @@ A lightweight music player
 - [ ] Version 4
   - [x] library scanning (0.4.1)
   - [ ] proper usage loop (0.4.2)
-    - [ ] open window with no audio
-    - [ ] scan library
-    - [ ] display library by track name
-    - [ ] build queue by clicking tracks
+    - [x] open window with no audio
+    - [x] scan library
+      - [ ] iterate through every folder in a scanlist (0.4.3)
+    - [x] display library by track name
+    - [x] build queue by clicking tracks
     - [ ] access queue
       - [ ] see queue contents
       - [ ] remove queue contents

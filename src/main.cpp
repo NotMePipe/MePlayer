@@ -1,3 +1,5 @@
+#define NEW_MAIN
+
 #include <iostream>
 
 #include <SDL3/SDL.h>
@@ -15,6 +17,7 @@
 void ScanLibrary(LibraryHandler **lib, const char *path); // TODO queue should be a library, not the playback queue
                                                            // TODO implement a library
 
+#ifndef NEW_MAIN
 int main(int argc, char* argv[]) {
     SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_NAME_STRING, "MePlayer");
     SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_VERSION_STRING, VERSION);
@@ -199,6 +202,123 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
+#else
+int main(int argc, char* argv[]) {
+    SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_NAME_STRING, "MePlayer");
+    SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_VERSION_STRING, VERSION);
+    SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_IDENTIFIER_STRING, "not.mepipe.meplayer");
+    SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_CREATOR_STRING, "Not MePipe");
+    SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_URL_STRING, "https://github.com/NotMePipe/MePlayer");
+    SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_TYPE_STRING, "mediaplayer");
+
+#ifdef NDEBUG
+    av_log_set_level(AV_LOG_QUIET);
+#endif
+
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS))
+    {
+        std::cerr << "Failed to initialize SDL: " << SDL_GetError() << "\n";
+        return -1;
+    }
+
+    SDL_Window *window = SDL_CreateWindow("MePlayer", SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE); // TODO Window contents should be relative to window size
+    if (!window)
+    {
+        std::cerr << "Failed to create SDL window: " << SDL_GetError() << "\n";
+        SDL_Quit();
+        return -1;
+    }
+
+    SDL_Renderer *renderer = SDL_CreateRenderer(window, nullptr);
+    if (!renderer)
+    {
+        std::cerr << "Failed to create SDL renderer: " << SDL_GetError() << "\n";
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        return -1;
+    }
+
+    if (!TTF_Init()) {
+        std::cerr << "Failed to initialize SDL_ttf: " << SDL_GetError() << "\n";
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        return -1;
+    }
+
+    bool quit = false;
+    SDL_Event event;
+
+    auto *playback_queue = PlaybackQueue::GetPlaybackQueue();
+
+    auto *library_handler = LibraryHandler::GetLibraryHandler();
+
+    ScanLibrary(&library_handler, "Music Folder");
+
+    library_handler->GenerateInfo();
+
+    Track *playback = nullptr;
+
+    std::vector<Button *> buttons;
+    for (const auto &[path, name] : library_handler->GetAllInfo()) {
+        auto *b = new TextButton(100, static_cast<float>(50 * buttons.size()), 400, 50, 5, "Roboto.ttf", 50);
+        b->SetText(renderer, name.c_str());
+        buttons.push_back(b);
+    }
+
+    while (!quit) {
+        while (SDL_PollEvent(&event)) {
+            switch (event.type)
+            {
+                case SDL_EVENT_QUIT:
+                    quit = true;
+                    break;
+                case SDL_EVENT_MOUSE_MOTION:
+                    for (const auto & button : buttons) {
+                        button->Hover(event.motion.x, event.motion.y);
+                    }
+                    break;
+                case SDL_EVENT_MOUSE_BUTTON_DOWN:
+                    if (event.button.button == SDL_BUTTON_LEFT) {
+                        for (const auto & button : buttons) {
+                            button->OnClick(event.motion.x, event.motion.y);
+                        }
+                    }
+                    break;
+                default: ;
+            }
+        }
+
+        if (playback != nullptr) {
+
+        }
+
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderClear(renderer);
+
+        for (const auto & button : buttons) {
+            button->Render(renderer);
+        }
+
+        SDL_RenderPresent(renderer);
+    }
+
+    for (const auto & button : buttons) {
+        delete button;
+    }
+
+    PlaybackQueue::Close();
+    LibraryHandler::Close();
+
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+
+    TTF_Quit();
+    SDL_Quit();
+
+    return 0;
+}
+#endif
 
 void ScanLibrary(LibraryHandler **lib, const char *path) {
     SDL_PathInfo info;
@@ -224,7 +344,7 @@ void ScanLibrary(LibraryHandler **lib, const char *path) {
             return;
         }
 
-        // (*lib)->Insert(path, true);
+        (*lib)->Insert(path, true);
 
         for (int i = 0; i < count; i++) {
             ScanLibrary(lib, std::string(path).append("/").append(entries[i]).c_str());
