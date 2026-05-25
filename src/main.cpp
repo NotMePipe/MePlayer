@@ -2,7 +2,9 @@
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include <SDL3_ttf/SDL_ttf.h>
 
+#include "TextButton.h"
 #include "LibraryHandler.h"
 #include "PlaybackQueue.h"
 #include "Track.h"
@@ -48,6 +50,14 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
+    if (!TTF_Init()) {
+        std::cerr << "Failed to initialize SDL_ttf: " << SDL_GetError() << "\n";
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        return -1;
+    }
+
     bool quit = false;
     SDL_Event event;
 
@@ -65,6 +75,14 @@ int main(int argc, char* argv[]) {
     queue->Play(&playback, 0);
 
     SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, playback->CoverArt());
+
+    auto *b = new TextButton(200, 100, 200, 50, 5, "Roboto.ttf", 50);
+    b->SetButtonColor(0, 0, 0, 0);
+    b->SetBorderColor(255, 255, 255, 255);
+    b->SetButtonHoverColor(0, 0, 0, 0);
+    b->SetBorderHoverColor(255, 0, 0, 255);
+    b->SetTextColor(255, 255, 255, 255);
+    b->SetText(renderer, "Test");
 
     while (!quit) {
         if (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_SPACE]) {
@@ -124,6 +142,14 @@ int main(int argc, char* argv[]) {
                 case SDL_EVENT_QUIT:
                     quit = true;
                     break;
+                case SDL_EVENT_MOUSE_MOTION:
+                    b->Hover(event.motion.x, event.motion.y);
+                    break;
+                case SDL_EVENT_MOUSE_BUTTON_DOWN:
+                    if (event.button.button == SDL_BUTTON_LEFT) {
+                        b->OnClick(event.motion.x, event.motion.y);
+                    }
+                    break;
                 default: ;
             }
         }
@@ -146,14 +172,19 @@ int main(int argc, char* argv[]) {
 
         SDL_SetWindowTitle(window, windowTitle.c_str());
 
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
         SDL_FRect dst = {(static_cast<float>(SCREEN_WIDTH) / 2) - 150, (static_cast<float>(SCREEN_HEIGHT) / 2) - 150, 300, 300};
 
         SDL_RenderTexture(renderer, texture, nullptr, &dst);
 
+        b->Render(renderer);
+
         SDL_RenderPresent(renderer);
     }
+
+    delete b;
 
     PlaybackQueue::Close();
 
@@ -162,6 +193,7 @@ int main(int argc, char* argv[]) {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
 
+    TTF_Quit();
     SDL_Quit();
 
     LibraryHandler::Close();
