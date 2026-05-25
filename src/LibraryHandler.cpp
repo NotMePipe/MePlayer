@@ -2,7 +2,7 @@
 
 #include <cstring>
 
-#include "SDL3/SDL_filesystem.h"
+#include <SDL3/SDL_filesystem.h>
 
 LibraryHandler *LibraryHandler::sInstance;
 

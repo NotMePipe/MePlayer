@@ -2,7 +2,7 @@
 #define Playback_H
 
 #include <SDL3/SDL_audio.h>
-#include "SDL3/SDL_render.h"
+#include <SDL3/SDL_render.h>
 
 extern "C" {
 #include <libavformat/avformat.h>
