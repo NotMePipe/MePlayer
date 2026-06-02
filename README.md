@@ -62,6 +62,8 @@ A lightweight music player
 - [ ] Image Button
   - Planned for: 0.6.0
 - [ ] Album 
-  - Added: 0.5.0
+  - Planned for: 0.5.0
+- [ ] Frame
+  - Planned for: 0.4.2
 - [ ] Scrolling Frame
   - Added: 0.4.2
