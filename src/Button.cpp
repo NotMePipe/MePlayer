@@ -77,3 +77,11 @@ void Button::Hover(const float x, const float y) {
         activeBorder = &borderColor;
     }
 }
+
+SDL_FRect Button::GetBorder() const {
+    return borderRect;
+}
+
+SDL_FRect Button::GetFill() const {
+    return innerRect;
+}

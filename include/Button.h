@@ -25,6 +25,9 @@ public:
 
     virtual void OnClick(float x, float y) {}
 
+    [[nodiscard]] SDL_FRect GetBorder() const;
+    [[nodiscard]] SDL_FRect GetFill() const;
+
 private:
     SDL_Color buttonColor{0, 0, 0, 0};
     SDL_Color borderColor{255, 255, 255, 255};
