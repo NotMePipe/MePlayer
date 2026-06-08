@@ -18,7 +18,7 @@ void PlaybackQueue::Close() {
 }
 
 PlaybackQueue::PlaybackQueue() {
-    currentIndex = 0;
+    currentIndex = -1;
     queue = {};
 }
 
@@ -27,14 +27,14 @@ PlaybackQueue::~PlaybackQueue() {
 }
 
 int PlaybackQueue::Play(Track **track, const unsigned int index) {
+    if (index >= queue.size()) {
+        return -1;
+    }
+
     if (currentTrack != nullptr) {
         delete currentTrack;
         currentTrack = nullptr;
         *track = nullptr;
-    }
-
-    if (index >= queue.size()) {
-        return -1;
     }
 
     currentTrack = new Track(queue[index].c_str());
@@ -45,7 +45,11 @@ int PlaybackQueue::Play(Track **track, const unsigned int index) {
 
 int PlaybackQueue::Next(Track **track) {
     if (repeat == -1) {
-        return Play(track, ++currentIndex);
+        if (Play(track, ++currentIndex) < 0) {
+            --currentIndex;
+            return -1;
+        }
+        return 0;
     }
 
     if (repeat == -2) {
