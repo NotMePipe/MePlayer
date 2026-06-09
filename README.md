@@ -2,16 +2,15 @@
 A lightweight music player
 
 ## Current version: 0.4.1
-
-- [x] Version 1
+- [x] Version 1 ***(Tech demo)***
   - [x] SDL window
   - [x] play single song
-- [x] Version 2
+- [x] Version 2 ***(Simple, hardcoded library)***
   - [x] FFmpeg decoding pipeline
   - [x] proper audio buffering
-- [x] Version 3
+- [x] Version 3 ***(Display current song info)***
   - [x] metadata extraction
-- [ ] Version 4
+- [ ] Version 4 ***(Library and UI Iteration 1)***
   - [x] library scanning (0.4.1)
   - [ ] proper usage loop (0.4.2)
     - [x] open window with no audio
@@ -28,17 +27,22 @@ A lightweight music player
     - [ ] jump to tracks
     - [x] do not crash when queue ends
       - overall: do not crash when no audio is playing
-- [ ] Version 5
+- [ ] Version 5 ***(Sort by album)***
   - [ ] album grouping
-- [ ] Version 6
+- [ ] Version 6 ***(UI Iteration 2)***
   - [ ] proper graphics architecture
     - [ ] application state machine
   - [ ] UI polish
-- [ ] Version 7
+- [ ] Version 7 ***(Sort by custom playlist)***
   - [ ] playlists
-- [ ] Version 8
+- [ ] Version 8 ***(Social integration)***
   - [ ] Discord RPC
   - [ ] Last.FM
+- [ ] Release Version ***(UI Iteration 3 and full-build features)***
+  - [ ] UI tweaks
+  - [ ] Bug fixes
+  - [ ] Implement any minor forgotten features
+    - (If the features were not minor, they would be listed already/not forgotten)
 
 ## Assets needed:
 - [x] Track
@@ -59,12 +63,12 @@ A lightweight music player
 - [x] Text Button
   - Added: 0.4.1
   - Last updated: 0.4.1
-- [ ] Image Button
-  - Planned for: 0.6.0
-- [ ] Album 
-  - Planned for: 0.5.0
 - [x] Frame
   - Added: 0.4.2
   - Last updated: 0.4.2
 - [ ] Scrolling Frame
   - Added: 0.4.2
+- [ ] Album
+  - Planned for: 0.5.0
+- [ ] Image Button
+  - Planned for: 0.6.0
