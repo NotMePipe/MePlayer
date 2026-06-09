@@ -15,7 +15,7 @@ A lightweight music player
   - [ ] proper usage loop (0.4.2)
     - [x] open window with no audio
     - [x] scan library
-      - [ ] iterate through every folder in a scanlist (0.4.3)
+      - [ ] iterate through every folder in a scan list (0.4.3)
     - [x] display library by track name
     - [x] build queue by clicking tracks
     - [ ] access queue
