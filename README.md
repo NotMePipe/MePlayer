@@ -67,7 +67,7 @@ A lightweight music player
   - Added: 0.4.2
   - Last updated: 0.4.2
 - [ ] Scrolling Frame
-  - Added: 0.4.2
+  - Planned for: 0.4.2
 - [ ] Album
   - Planned for: 0.5.0
 - [ ] Image Button
