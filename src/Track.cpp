@@ -274,7 +274,6 @@ bool Track::IsPaused() const {
     return paused;
 }
 
-
 bool Track::TrackEnded() const {
     return track_pos_seconds >= dur_seconds;
 }
@@ -284,14 +283,16 @@ const char *Track::Artist() const {
     if (entry == nullptr) {
         return "";
     }
-    return entry->value;}
+    return entry->value;
+}
 
 const char *Track::Title() const {
     const AVDictionaryEntry *entry = av_dict_get(format_context->metadata, "title", nullptr, 0);
     if (entry == nullptr) {
         return "";
     }
-    return entry->value;}
+    return entry->value;
+}
 
 const char *Track::Album() const {
     const AVDictionaryEntry *entry = av_dict_get(format_context->metadata, "album", nullptr, 0);
