@@ -11,8 +11,8 @@
 #include "PlaybackQueue.h"
 #include "Track.h"
 
-#define SCREEN_WIDTH 640
-#define SCREEN_HEIGHT 480
+#define SCREEN_WIDTH 960
+#define SCREEN_HEIGHT 540
 
 void ScanLibrary(LibraryHandler **lib, const char *path);
 
@@ -252,11 +252,11 @@ int main(int argc, char* argv[]) {
     library_handler->GenerateInfo();
 
     // TODO Replace (ALL) constant sizing with dynamic scaling
-    auto *frame = new Frame(0, 25, 465, 455);
+    auto *frame = new Frame(0, 25, 697.5, 511.875);
     for (const auto &[path, name] : library_handler->GetAllInfo()) {
-        // TODO Replace 155 and 3 (and/or dynamic equivalents) with user-specified values
+        // TODO Replace 232.5 and 3 (and/or dynamic equivalents) with user-specified values
         // TODO Find better height than 50
-        auto *b = frame->Add(static_cast<float>(155 * (frame->NumChildren() % 3)), static_cast<float>(50  * static_cast<int>(frame->NumChildren() / 3)), 155, 50, 5, "Roboto.ttf", 50);
+        auto *b = frame->Add(static_cast<float>(232.5 * (frame->NumChildren() % 3)), static_cast<float>(50  * static_cast<int>(frame->NumChildren() / 3)), 232.5, 50, 5, "Roboto.ttf", 50);
         b->SetText(renderer, name.c_str());
     }
 
