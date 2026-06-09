@@ -6,7 +6,7 @@
 #include <SDL3/SDL_main.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
-#include "TextButton.h"
+#include "Frame.h"
 #include "LibraryHandler.h"
 #include "PlaybackQueue.h"
 #include "Track.h"
@@ -14,8 +14,7 @@
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 
-void ScanLibrary(LibraryHandler **lib, const char *path); // TODO queue should be a library, not the playback queue
-                                                           // TODO implement a library
+void ScanLibrary(LibraryHandler **lib, const char *path);
 
 #ifndef NEW_MAIN
 int main(int argc, char* argv[]) {
@@ -221,7 +220,7 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    SDL_Window *window = SDL_CreateWindow("MePlayer", SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE); // TODO Window contents should be relative to window size
+    SDL_Window *window = SDL_CreateWindow("MePlayer", SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE);
     if (!window)
     {
         std::cerr << "Failed to create SDL window: " << SDL_GetError() << "\n";
@@ -246,25 +245,24 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    bool quit = false;
-    SDL_Event event;
-
     auto *playback_queue = PlaybackQueue::GetPlaybackQueue();
 
     auto *library_handler = LibraryHandler::GetLibraryHandler();
-
     ScanLibrary(&library_handler, "Music Folder");
-
     library_handler->GenerateInfo();
 
-    Track *playback = nullptr;
-
-    std::vector<Button *> buttons;
+    // TODO Replace (ALL) constant sizing with dynamic scaling
+    auto *frame = new Frame(0, 25, 465, 455);
     for (const auto &[path, name] : library_handler->GetAllInfo()) {
-        auto *b = new TextButton(100, static_cast<float>(50 * buttons.size()), 400, 50, 5, "Roboto.ttf", 50);
+        // TODO Replace 155 and 3 (and/or dynamic equivalents) with user-specified values
+        // TODO Find better height than 50
+        auto *b = frame->Add(static_cast<float>(155 * (frame->NumChildren() % 3)), static_cast<float>(50  * static_cast<int>(frame->NumChildren() / 3)), 155, 50, 5, "Roboto.ttf", 50);
         b->SetText(renderer, name.c_str());
-        buttons.push_back(b);
     }
+
+    Track *playback = nullptr;
+    bool quit = false;
+    SDL_Event event;
 
     while (!quit) {
         while (SDL_PollEvent(&event)) {
@@ -273,39 +271,34 @@ int main(int argc, char* argv[]) {
                 case SDL_EVENT_QUIT:
                     quit = true;
                     break;
-                case SDL_EVENT_MOUSE_MOTION:
-                    for (const auto & button : buttons) {
-                        button->Hover(event.motion.x, event.motion.y);
-                    }
-                    break;
-                case SDL_EVENT_MOUSE_BUTTON_DOWN:
-                    if (event.button.button == SDL_BUTTON_LEFT) {
-                        for (const auto & button : buttons) {
-                            button->OnClick(event.motion.x, event.motion.y);
-                        }
-                    }
-                    break;
-                default: ;
+                default:
+                    frame->HandleEvent(event);
             }
         }
 
         if (playback != nullptr) {
+            if (playback->IsPaused()) { // TODO Remove constant autoplay
+                playback->Play();
+            }
 
+            if (playback->TrackEnded()) {
+                if (playback_queue->Next(&playback) < 0) {
+                    playback->Pause();
+                }
+            }
+        } else {
+            playback_queue->Next(&playback);
         }
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
-        for (const auto & button : buttons) {
-            button->Render(renderer);
-        }
+        frame->Render(renderer);
 
         SDL_RenderPresent(renderer);
     }
 
-    for (const auto & button : buttons) {
-        delete button;
-    }
+    delete frame;
 
     PlaybackQueue::Close();
     LibraryHandler::Close();
@@ -330,7 +323,6 @@ void ScanLibrary(LibraryHandler **lib, const char *path) {
 
     if (info.type == SDL_PATHTYPE_FILE) {
         (*lib)->Insert(path, false);
-        // (*queue)->Enqueue(path); // TODO This needs to be a library later (which accounts for disk and track numbers)
         return;
     }
 

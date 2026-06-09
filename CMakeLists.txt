@@ -15,6 +15,8 @@ add_executable(${PROJECT_NAME}
         include/LibraryHandler.h
         include/Button.h
         include/TextButton.h
+        include/Frame.h
+        src/Frame.cpp
 )
 
 # I feel like this probably isn't a great practice
