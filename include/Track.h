@@ -1,5 +1,5 @@
-#ifndef Playback_H
-#define Playback_H
+#ifndef TRACK_H
+#define TRACK_H
 
 #include <SDL3/SDL_audio.h>
 #include <SDL3/SDL_render.h>
@@ -60,4 +60,4 @@ private:
     bool LoadCoverArt();
 };
 
-#endif //Playback_H
+#endif //TRACK_H
