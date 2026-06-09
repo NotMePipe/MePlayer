@@ -20,13 +20,19 @@ void Button::Render(SDL_Renderer *renderer) {
 }
 
 void Button::SetPos(const float newX, const float newY) {
+    const float x = innerRect.x - borderRect.x;
+    const float y = innerRect.y - borderRect.y;
     borderRect.x = newX;
     borderRect.y = newY;
+    innerRect.x = newX + x;
+    innerRect.y = newY + y;
 }
 
 void Button::SetSize(const float newW, const float newH) {
+    const float thick = (borderRect.w - innerRect.w) / 2;
     borderRect.w = newW;
     borderRect.h = newH;
+    SetBorderThickness(thick);
 }
 
 void Button::SetButtonColor(const Uint8 r,const Uint8 g,const Uint8 b,const Uint8 a) {
