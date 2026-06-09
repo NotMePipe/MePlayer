@@ -9,12 +9,15 @@
 #include "Frame.h"
 #include "LibraryHandler.h"
 #include "PlaybackQueue.h"
+#include "ScrollingFrame.h"
 #include "Track.h"
 
 #define SCREEN_WIDTH 960
 #define SCREEN_HEIGHT 540
+#define SCROLL_SCALE 10
 
 void ScanLibrary(LibraryHandler **lib, const char *path);
+void AddQueueButton(SDL_Renderer *renderer, Frame *frame, const char *trackName, unsigned int index);
 
 #ifndef NEW_MAIN
 int main(int argc, char* argv[]) {
@@ -252,13 +255,16 @@ int main(int argc, char* argv[]) {
     library_handler->GenerateInfo();
 
     // TODO Replace (ALL) constant sizing with dynamic scaling
-    auto *frame = new Frame(0, 25, 697.5, 511.875);
+    auto *songSelect = new ScrollingFrame(0, 25, 697.5, 511.875, 1);
     for (const auto &[path, name] : library_handler->GetAllInfo()) {
         // TODO Replace 232.5 and 3 (and/or dynamic equivalents) with user-specified values
         // TODO Find better height than 50
-        auto *b = frame->Add(static_cast<float>(232.5 * (frame->NumChildren() % 3)), static_cast<float>(50  * static_cast<int>(frame->NumChildren() / 3)), 232.5, 50, 5, "Roboto.ttf", 50);
+        auto *b = songSelect->Add(static_cast<float>(232.5 * (songSelect->NumChildren() % 3)), static_cast<float>(50  * static_cast<int>(songSelect->NumChildren() / 3)), 232.5, 50, 5, "Roboto.ttf", 50);
         b->SetText(renderer, name.c_str());
     }
+
+    auto *queueFrame = new ScrollingFrame(697.5, 25, 262.5, 511.875, 2);
+    playback_queue->SetQueueAddCallback(renderer, queueFrame, AddQueueButton);
 
     Track *playback = nullptr;
     bool quit = false;
@@ -271,8 +277,12 @@ int main(int argc, char* argv[]) {
                 case SDL_EVENT_QUIT:
                     quit = true;
                     break;
+                case SDL_EVENT_MOUSE_WHEEL:
+                    songSelect->Scroll(event.wheel.mouse_x, event.wheel.mouse_y, event.wheel.y * SCROLL_SCALE);
+                    break;
                 default:
-                    frame->HandleEvent(event);
+                    songSelect->HandleEvent(event);
+                    queueFrame->HandleEvent(event);
             }
         }
 
@@ -293,12 +303,14 @@ int main(int argc, char* argv[]) {
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
-        frame->Render(renderer);
+        songSelect->Render(renderer);
+        queueFrame->Render(renderer);
 
         SDL_RenderPresent(renderer);
     }
 
-    delete frame;
+    delete songSelect;
+    delete queueFrame;
 
     PlaybackQueue::Close();
     LibraryHandler::Close();
@@ -344,4 +356,10 @@ void ScanLibrary(LibraryHandler **lib, const char *path) {
 
         SDL_free(entries);
     }
+}
+
+void AddQueueButton(SDL_Renderer *renderer, Frame *frame, const char *trackName, const unsigned int index) {
+    auto *b = frame->Add(0, static_cast<float>(50 * frame->NumChildren()), frame->GetRect().w, 50, 5, "Roboto.ttf", 50);
+    b->SetText(renderer, trackName);
+    b->AssignIndex(index);
 }

@@ -3,10 +3,12 @@
 #include <iostream>
 
 #include "LibraryHandler.h"
+#include "PlaybackQueue.h"
 
 TextButton::TextButton(const float x, const float y, const float w, const float h, const float thickness, const char *font, const float textSize)
     : Button{x, y, w, h, thickness} {
     SetFont(font, textSize);
+    index = -1;
 }
 
 TextButton::~TextButton() {
@@ -48,8 +50,16 @@ void TextButton::Render(SDL_Renderer *renderer) {
     SDL_RenderTexture(renderer, texture, nullptr, &innerRect);
 }
 
-void TextButton::OnClick(const float x, const float y) {
+void TextButton::OnClick(const float x, const float y, const int frameType) {
     if (IsInBounds(x, y)) {
-        LibraryHandler::GetLibraryHandler()->QueueTrack(textString.c_str());
+        if (frameType == 1) {
+            LibraryHandler::GetLibraryHandler()->QueueTrack(textString.c_str());
+        } else if (frameType == 2) {
+            PlaybackQueue::GetPlaybackQueue()->Play(index);
+        }
     }
+}
+
+void TextButton::AssignIndex(const unsigned int i) {
+    index = i;
 }

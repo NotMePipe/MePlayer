@@ -17,6 +17,8 @@ add_executable(${PROJECT_NAME}
         include/TextButton.h
         include/Frame.h
         src/Frame.cpp
+        src/ScrollingFrame.cpp
+        include/ScrollingFrame.h
 )
 
 # I feel like this probably isn't a great practice

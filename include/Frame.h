@@ -9,7 +9,7 @@
 
 class Frame {
 public:
-    Frame(float x, float y, float w, float h);
+    Frame(float x, float y, float w, float h, int frameType = 0);
     ~Frame();
 
     void Move(float x, float y);
@@ -25,11 +25,18 @@ public:
 
     [[nodiscard]] unsigned int NumChildren() const;
 
+    [[nodiscard]] SDL_FRect GetRect() const;
+
 private:
     SDL_FRect rect{};
     SDL_Color color{0, 0, 0, 255};
 
+    int type;
+
+protected:
     std::vector<Button *> buttons;
+
+    [[nodiscard]] bool IsInBounds(float x, float y) const;
 };
 
 #endif //FRAME_H

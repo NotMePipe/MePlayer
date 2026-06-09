@@ -20,16 +20,19 @@ public:
 
     void Render(SDL_Renderer *renderer) override;
 
-    void OnClick(float x, float y) override;
+    void OnClick(float x, float y, int frameType) override;
+
+    void AssignIndex(unsigned int i);
 
 private:
     TTF_Font *font = nullptr;
-
     SDL_Texture *texture = nullptr;
 
     SDL_Color textColor{255, 255, 255, 255};
 
     std::string textString;
+
+    unsigned int index;
 };
 
 #endif //TEXT_BUTTON_H

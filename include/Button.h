@@ -23,7 +23,7 @@ public:
 
     void Hover(float x, float y);
 
-    virtual void OnClick(float x, float y) {}
+    virtual void OnClick(float x, float y, int frameType) {}
 
     [[nodiscard]] SDL_FRect GetBorder() const;
     [[nodiscard]] SDL_FRect GetFill() const;
