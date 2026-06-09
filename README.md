@@ -23,10 +23,10 @@ A lightweight music player
       - [ ] see queue contents
       - [ ] remove queue contents
       - [ ] rearrange queue contents (0.4.3)
-    - [ ] play tracks
+    - [x] play tracks
     - [ ] skip tracks
     - [ ] jump to tracks
-    - [ ] do not crash when queue ends
+    - [x] do not crash when queue ends
       - overall: do not crash when no audio is playing
 - [ ] Version 5
   - [ ] album grouping
@@ -46,7 +46,7 @@ A lightweight music player
   - Last updated: 0.3.0
 - [x] Playback Queue
   - Added: 0.2.0
-  - Last updated: 0.4.1
+  - Last updated: 0.4.2
 - [x] Library
   - Added: 0.4.0
   - Last updated: 0.4.0
@@ -55,7 +55,7 @@ A lightweight music player
   - Last updated: 0.4.2
 - [x] Button
   - Added: 0.4.1
-  - Last updated: 0.4.1
+  - Last updated: 0.4.2
 - [x] Text Button
   - Added: 0.4.1
   - Last updated: 0.4.1
@@ -63,7 +63,8 @@ A lightweight music player
   - Planned for: 0.6.0
 - [ ] Album 
   - Planned for: 0.5.0
-- [ ] Frame
-  - Planned for: 0.4.2
+- [x] Frame
+  - Added: 0.4.2
+  - Last updated: 0.4.2
 - [ ] Scrolling Frame
   - Added: 0.4.2
