@@ -18,13 +18,13 @@ A lightweight music player
       - [ ] iterate through every folder in a scan list (0.4.3)
     - [x] display library by track name
     - [x] build queue by clicking tracks
-    - [ ] access queue
-      - [ ] see queue contents
+    - [x] access queue
+      - [x] see queue contents
       - [ ] remove queue contents
       - [ ] rearrange queue contents (0.4.3)
     - [x] play tracks
     - [ ] skip tracks
-    - [ ] jump to tracks
+    - [x] jump to tracks
     - [x] do not crash when queue ends
       - overall: do not crash when no audio is playing
 - [ ] Version 5 ***(Sort by album)***
@@ -62,12 +62,13 @@ A lightweight music player
   - Last updated: 0.4.2
 - [x] Text Button
   - Added: 0.4.1
-  - Last updated: 0.4.1
+  - Last updated: 0.4.2
 - [x] Frame
   - Added: 0.4.2
   - Last updated: 0.4.2
-- [ ] Scrolling Frame
-  - Planned for: 0.4.2
+- [x] Scrolling Frame
+  - Added: 0.4.2
+  - Last updated: 0.4.2
 - [ ] Album
   - Planned for: 0.5.0
 - [ ] Image Button
