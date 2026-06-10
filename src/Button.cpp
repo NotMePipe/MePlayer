@@ -64,10 +64,17 @@ void Button::SetBorderHoverColor(const Uint8 r,const Uint8 g,const Uint8 b,const
 }
 
 void Button::SetBorderThickness(const float newThick) {
-    innerRect.x = borderRect.x + newThick;
-    innerRect.y = borderRect.y + newThick;
-    innerRect.w = borderRect.w - (newThick * 2);
-    innerRect.h = borderRect.h - (newThick * 2);
+    if (newThick < 0) {
+        innerRect.x = borderRect.x;
+        innerRect.y = borderRect.y;
+        innerRect.w = borderRect.w;
+        innerRect.h = borderRect.h;
+    } else {
+        innerRect.x = borderRect.x + newThick;
+        innerRect.y = borderRect.y + newThick;
+        innerRect.w = borderRect.w - (newThick * 2);
+        innerRect.h = borderRect.h - (newThick * 2);
+    }
 }
 
 bool Button::IsInBounds(const float x, const float y) const {
@@ -90,4 +97,8 @@ SDL_FRect Button::GetBorder() const {
 
 SDL_FRect Button::GetFill() const {
     return innerRect;
+}
+
+void Button::SetOnClickEvent(void (*event)(void *)) {
+    clickEvent = event;
 }

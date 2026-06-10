@@ -28,6 +28,8 @@ public:
     [[nodiscard]] SDL_FRect GetBorder() const;
     [[nodiscard]] SDL_FRect GetFill() const;
 
+    void SetOnClickEvent(void (*event)(void *));
+
 private:
     SDL_Color buttonColor{0, 0, 0, 0};
     SDL_Color borderColor{255, 255, 255, 255};
@@ -43,6 +45,8 @@ protected:
     SDL_FRect innerRect{};
 
     [[nodiscard]] bool IsInBounds(float x, float y) const;
+
+    void (*clickEvent)(void *) = nullptr;
 };
 
 
