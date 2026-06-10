@@ -15,7 +15,7 @@ public:
     static LibraryHandler *GetLibraryHandler();
     static void Close();
 
-    void Insert(const char *path, bool isDirectory);
+    void Insert(const char *path);
 
     void GenerateInfo();
 

@@ -17,7 +17,9 @@
 #define SCROLL_SCALE 10
 
 void ScanLibrary(LibraryHandler **lib, const char *path);
-void AddQueueButton(SDL_Renderer *renderer, Frame *frame, const char *trackName, unsigned int index);
+void AddQueueButton(SDL_Renderer *renderer, Frame *frame, const char *trackName, int index);
+void AddToQueue(void *trackName);
+void PlayInQueue(void *index);
 
 int main(int argc, char* argv[]) {
     SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_NAME_STRING, "MePlayer");
@@ -68,21 +70,30 @@ int main(int argc, char* argv[]) {
     ScanLibrary(&library_handler, "Music Folder");
     library_handler->GenerateInfo();
 
+    auto *topBar = new Button(0, 0, 960, 30, -1);
+    topBar->SetButtonColor(255, 255, 255, 255);
+
     // TODO Replace (ALL) constant sizing with dynamic scaling
-    auto *songSelect = new ScrollingFrame(0, 25, 697.5, 511.875, 1);
+    auto *songSelect = new ScrollingFrame(0, 30, 750, 465, 1);
     for (const auto &[path, name] : library_handler->GetAllInfo()) {
-        // TODO Replace 232.5 and 3 (and/or dynamic equivalents) with user-specified values
+        // TODO Replace most numbers with user-specified values
         // TODO Find better height than 50
-        auto *b = songSelect->Add(static_cast<float>(232.5 * (songSelect->NumChildren() % 3)), static_cast<float>(50  * static_cast<int>(songSelect->NumChildren() / 3)), 232.5, 50, 5, "Roboto.ttf", 50);
+        const float width = songSelect->GetRect().w / 3;
+        auto *b = songSelect->Add(width * static_cast<float>(songSelect->NumChildren() % 3), static_cast<float>(50  * static_cast<int>(songSelect->NumChildren() / 3)), width, 50, 5, "Roboto.ttf", 50);
         b->SetText(renderer, name.c_str());
+        b->SetOnClickEvent(AddToQueue);
     }
 
-    auto *queueFrame = new ScrollingFrame(697.5, 25, 262.5, 511.875, 2);
+    auto *queueFrame = new ScrollingFrame(750, 30, 210, 465, 2);
     playback_queue->SetQueueAddCallback(renderer, queueFrame, AddQueueButton);
+
+    auto *playbackControls = new Frame(175, 465, 785, 75, 0);
+    playbackControls->SetColor(255, 0, 0, 255);
 
     Track *playback = nullptr;
     bool quit = false;
     SDL_Event event;
+    SDL_Texture *trackCoverArt = nullptr; // TODO This currently doesn't work
 
     while (!quit) {
         while (SDL_PollEvent(&event)) {
@@ -118,14 +129,24 @@ int main(int argc, char* argv[]) {
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
+        topBar->Render(renderer);
         songSelect->Render(renderer);
         queueFrame->Render(renderer);
+
+        if (trackCoverArt != nullptr) { // TODO This currently isn't working NOLINT
+            SDL_FRect dst = {0, 365, 175, 175};
+            SDL_RenderTexture(renderer, trackCoverArt, nullptr, &dst);
+        }
+
+        playbackControls->Render(renderer);
 
         SDL_RenderPresent(renderer);
     }
 
+    delete topBar;
     delete songSelect;
     delete queueFrame;
+    delete playbackControls;
 
     PlaybackQueue::Close();
     LibraryHandler::Close();
@@ -139,7 +160,7 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-void ScanLibrary(LibraryHandler **lib, const char *path) {
+void ScanLibrary(LibraryHandler **lib, const char *path) { // TODO This currently will duplicate directories if handled recursively
     SDL_PathInfo info;
 
     if (!SDL_GetPathInfo(path, &info)) {
@@ -148,7 +169,7 @@ void ScanLibrary(LibraryHandler **lib, const char *path) {
     }
 
     if (info.type == SDL_PATHTYPE_FILE) {
-        (*lib)->Insert(path, false);
+        (*lib)->Insert(path);
         return;
     }
 
@@ -162,8 +183,6 @@ void ScanLibrary(LibraryHandler **lib, const char *path) {
             return;
         }
 
-        (*lib)->Insert(path, true);
-
         for (int i = 0; i < count; i++) {
             ScanLibrary(lib, std::string(path).append("/").append(entries[i]).c_str());
         }
@@ -172,8 +191,17 @@ void ScanLibrary(LibraryHandler **lib, const char *path) {
     }
 }
 
-void AddQueueButton(SDL_Renderer *renderer, Frame *frame, const char *trackName, const unsigned int index) {
+void AddQueueButton(SDL_Renderer *renderer, Frame *frame, const char *trackName, const int index) {
     auto *b = frame->Add(0, static_cast<float>(50 * frame->NumChildren()), frame->GetRect().w, 50, 5, "Roboto.ttf", 50);
     b->SetText(renderer, trackName);
     b->AssignIndex(index);
+    b->SetOnClickEvent(PlayInQueue);
+}
+
+void AddToQueue(void *trackName) {
+    LibraryHandler::GetLibraryHandler()->QueueTrack(static_cast<std::string *>(trackName)->c_str());
+}
+
+void PlayInQueue(void *index) {
+    PlaybackQueue::GetPlaybackQueue()->Play(*static_cast<int *>(index));
 }

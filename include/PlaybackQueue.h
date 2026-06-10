@@ -12,11 +12,11 @@ public:
     static PlaybackQueue *GetPlaybackQueue();
     static void Close();
 
-    int Play(unsigned int index);
-    int Play(Track **track, unsigned int index);
+    int Play(int index);
+    int Play(Track **track, int index);
     int Next(Track **track);
 
-    [[nodiscard]] unsigned int GetCurrentIndex() const;
+    [[nodiscard]] int GetCurrentIndex() const;
 
     void Enqueue(const char *filename);
     void Clear();
@@ -25,7 +25,7 @@ public:
     void Repeat(bool toggle);
     void Repeat(unsigned int index);
 
-    void SetQueueAddCallback(SDL_Renderer *renderer, Frame *frame, void (*callback)(SDL_Renderer *, Frame *, const char *, unsigned int));
+    void SetQueueAddCallback(SDL_Renderer *renderer, Frame *frame, void (*callback)(SDL_Renderer *, Frame *, const char *, int));
 private:
     static PlaybackQueue *sInstance;
 
@@ -36,10 +36,10 @@ private:
 
     Track *currentTrack = nullptr;
 
-    unsigned int currentIndex;
+    int currentIndex;
     int repeat = -1;
 
-    void (*addCallback)(SDL_Renderer *, Frame *, const char *, unsigned int) = nullptr;
+    void (*addCallback)(SDL_Renderer *, Frame *, const char *, int) = nullptr;
     SDL_Renderer *rend = nullptr;
     Frame *f = nullptr;
 };

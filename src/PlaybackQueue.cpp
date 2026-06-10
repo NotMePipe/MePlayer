@@ -26,7 +26,7 @@ PlaybackQueue::~PlaybackQueue() {
     Clear();
 }
 
-int PlaybackQueue::Play(const unsigned int index) {
+int PlaybackQueue::Play(const int index) {
     if (currentTrack == nullptr) {
         return -2;
     }
@@ -34,7 +34,7 @@ int PlaybackQueue::Play(const unsigned int index) {
     return Play(&currentTrack, index);
 }
 
-int PlaybackQueue::Play(Track **track, const unsigned int index) {
+int PlaybackQueue::Play(Track **track, const int index) {
     if (index >= queue.size()) {
         return -1;
     }
@@ -73,7 +73,7 @@ int PlaybackQueue::Next(Track **track) {
     return 0;
 }
 
-unsigned int PlaybackQueue::GetCurrentIndex() const {
+int PlaybackQueue::GetCurrentIndex() const {
     return currentIndex;
 }
 
@@ -85,7 +85,7 @@ void PlaybackQueue::Enqueue(const char *filename) {
 
     if (addCallback != nullptr) {
         const std::string name = filename;
-        addCallback(rend, f, name.substr(name.find_last_of("/\\") + 1).c_str(), static_cast<unsigned int>(queue.size()) - 1);
+        addCallback(rend, f, name.substr(name.find_last_of("/\\") + 1).c_str(), static_cast<int>(queue.size()) - 1);
     }
 }
 
@@ -97,6 +97,7 @@ void PlaybackQueue::Clear() {
 
     queue.clear();
     queue.shrink_to_fit();
+    currentIndex = -1;
 }
 
 int PlaybackQueue::Repeat() const {
@@ -117,7 +118,7 @@ void PlaybackQueue::Repeat(const unsigned int index) {
     }
 }
 
-void PlaybackQueue::SetQueueAddCallback(SDL_Renderer *renderer, Frame *frame, void (*callback)(SDL_Renderer *, Frame *, const char *, unsigned int)) {
+void PlaybackQueue::SetQueueAddCallback(SDL_Renderer *renderer, Frame *frame, void (*callback)(SDL_Renderer *, Frame *, const char *, int)) {
     addCallback = callback;
     rend = renderer;
     f = frame;

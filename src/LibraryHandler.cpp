@@ -36,12 +36,8 @@ LibraryHandler::~LibraryHandler() {
     library.close();
 }
 
-void LibraryHandler::Insert(const char *path, const bool isDirectory) {
-    if (isDirectory) { // TODO Determine if this needs to be accounted for (and, if so, how)
-        // library << "dir: " << path << "\n";
-    } else {
-        library << path << "\n";
-    }
+void LibraryHandler::Insert(const char *path) {
+    library << path << "\n";
 }
 
 void LibraryHandler::GenerateInfo() {
