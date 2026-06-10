@@ -52,10 +52,12 @@ void TextButton::Render(SDL_Renderer *renderer) {
 
 void TextButton::OnClick(const float x, const float y, const int frameType) {
     if (IsInBounds(x, y)) {
-        if (frameType == 1) {
-            LibraryHandler::GetLibraryHandler()->QueueTrack(textString.c_str());
-        } else if (frameType == 2) {
-            PlaybackQueue::GetPlaybackQueue()->Play(index);
+        if (clickEvent != nullptr) {
+            if (frameType == 1) { // TODO I want to do away with frameType
+                clickEvent(&textString);
+            } else if (frameType == 2) {
+                clickEvent(&index);
+            }
         }
     }
 }
