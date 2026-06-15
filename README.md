@@ -23,8 +23,15 @@ A lightweight music player
       - [ ] remove queue contents
       - [ ] rearrange queue contents (0.4.3)
     - [x] play tracks
-    - [ ] skip tracks
+    - [ ] playback controls
+      - [ ] skip tracks
+      - [ ] pause tracks
+      - [ ] restart tracks
+      - [ ] previous track (0.4.3)
+      - [ ] jump to time (0.4.3)
     - [x] jump to tracks
+      - Cover art broken due to current method of jumping to tracks
+        - (I believe this is because the function with no Track* only sets PlaybackQueue currentTrack, not the actual playback Track (I have no clue why audio works))
     - [x] do not crash when queue ends
       - overall: do not crash when no audio is playing
 - [ ] Version 5 ***(Sort by album)***
