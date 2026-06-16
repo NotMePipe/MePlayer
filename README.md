@@ -30,8 +30,6 @@ A lightweight music player
       - [ ] previous track (0.4.3)
       - [ ] jump to time (0.4.3)
     - [x] jump to tracks
-      - Cover art broken due to current method of jumping to tracks
-        - (I believe this is because the function with no Track* only sets PlaybackQueue currentTrack, not the actual playback Track (I have no clue why audio works))
     - [x] do not crash when queue ends
       - overall: do not crash when no audio is playing
 - [ ] Version 5 ***(Sort by album)***
@@ -54,13 +52,13 @@ A lightweight music player
 ## Assets needed:
 - [x] Track
   - Added: 0.1.0
-  - Last updated: 0.3.0
+  - Last updated: 0.4.2
 - [x] Playback Queue
   - Added: 0.2.0
   - Last updated: 0.4.2
 - [x] Library
   - Added: 0.4.0
-  - Last updated: 0.4.0
+  - Last updated: 0.4.2
 - [x] Library Handler
   - Added: 0.4.1
   - Last updated: 0.4.2
@@ -74,6 +72,9 @@ A lightweight music player
   - Added: 0.4.2
   - Last updated: 0.4.2
 - [x] Scrolling Frame
+  - Added: 0.4.2
+  - Last updated: 0.4.2
+- [x] Events
   - Added: 0.4.2
   - Last updated: 0.4.2
 - [ ] Album
