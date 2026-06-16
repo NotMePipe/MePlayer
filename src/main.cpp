@@ -20,8 +20,16 @@ void ScanLibrary(LibraryHandler **lib, const char *path);
 void AddQueueButton(SDL_Renderer *renderer, Frame *frame, const char *trackName, int index);
 void AddToQueue(void *info);
 void PlayInQueue(void *info);
+// TODO These need overhauled
+void PlayPause(void *info);
+void RR(void *info);
+void FF(void *info);
 
 Track *playback;
+// TODO Temporary playback handlers
+bool playing = true;
+bool restart = false;
+bool skip = false;
 
 int main(int argc, char* argv[]) {
     SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_NAME_STRING, "MePlayer");
@@ -91,6 +99,21 @@ int main(int argc, char* argv[]) {
 
     auto *playbackControls = new Frame(175, 465, 785, 75);
     playbackControls->SetColor(255, 0, 0, 255);
+    // TODO I never got the chance to properly scale these
+    // TODO These should all become image buttons
+    {
+        auto *playPause = playbackControls->Add(playbackControls->GetRect().w / 2, 25.0 / 2, playbackControls->GetRect().w / 5, 50, 5, "Roboto.ttf", 50);
+        playPause->SetText(renderer, "Play/Pause");
+        playPause->SetOnClickEvent(PlayPause);
+
+        auto *rr = playbackControls->Add((playbackControls->GetRect().w / 2) - (playbackControls->GetRect().w / 5), 25.0 / 2, playbackControls->GetRect().w / 5, 50, 5, "Roboto.ttf", 50);
+        rr->SetText(renderer, "RR");
+        rr->SetOnClickEvent(RR);
+
+        auto *ff = playbackControls->Add((playbackControls->GetRect().w / 2) + (playbackControls->GetRect().w / 5), 25.0 / 2, playbackControls->GetRect().w / 5, 50, 5, "Roboto.ttf", 50);
+        ff->SetText(renderer, "FF");
+        ff->SetOnClickEvent(FF);
+    }
 
     playback = nullptr;
     bool quit = false;
@@ -116,19 +139,26 @@ int main(int argc, char* argv[]) {
                     } else {
                         songSelect->HandleEvent(event);
                         queueFrame->HandleEvent(event);
+                        playbackControls->HandleEvent(event);
                     }
             }
         }
 
         if (playback != nullptr) {
-            if (playback->IsPaused()) { // TODO Remove constant autoplay
+            if (playing && playback->IsPaused()) {
                 playback->Play();
+            } else if (!playing && !playback->IsPaused()) {
+                playback->Pause();
             }
 
-            if (playback->TrackEnded()) {
-                if (playback_queue->Next(&playback) < 0) {
-                    playback->Pause();
-                }
+            if (restart) {
+                restart = false;
+                playback->Restart();
+            }
+
+            if (playback->TrackEnded() || skip) {
+                skip = false;
+                playback_queue->Next(&playback);
             }
         } else {
             playback_queue->Next(&playback);
@@ -218,4 +248,16 @@ void AddToQueue(void *info) {
 
 void PlayInQueue(void *info) {
     PlaybackQueue::GetPlaybackQueue()->Play(&playback, static_cast<TextButtonInfo *>(info)->index);
+}
+
+void PlayPause(void *info) {
+    playing = !playing;
+}
+
+void RR(void *info) {
+    restart = true;
+}
+
+void FF(void *info) {
+    skip = true;
 }

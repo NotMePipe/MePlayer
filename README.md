@@ -18,15 +18,15 @@ A lightweight music player
       - [ ] iterate through every folder in a scan list (0.4.3)
     - [x] display library by track name
     - [x] build queue by clicking tracks
-    - [x] access queue
+    - [ ] access queue
       - [x] see queue contents
       - [ ] remove queue contents
       - [ ] rearrange queue contents (0.4.3)
     - [x] play tracks
     - [ ] playback controls
-      - [ ] skip tracks
-      - [ ] pause tracks
-      - [ ] restart tracks
+      - [x] skip tracks
+      - [x] pause tracks
+      - [x] restart tracks
       - [ ] previous track (0.4.3)
       - [ ] jump to time (0.4.3)
     - [x] jump to tracks
