@@ -6,7 +6,7 @@
 #include <SDL3/SDL_main.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
-#include "Frame.h"
+#include "Events.h"
 #include "LibraryHandler.h"
 #include "PlaybackQueue.h"
 #include "ScrollingFrame.h"
@@ -18,8 +18,10 @@
 
 void ScanLibrary(LibraryHandler **lib, const char *path);
 void AddQueueButton(SDL_Renderer *renderer, Frame *frame, const char *trackName, int index);
-void AddToQueue(void *trackName);
-void PlayInQueue(void *index);
+void AddToQueue(void *info);
+void PlayInQueue(void *info);
+
+Track *playback;
 
 int main(int argc, char* argv[]) {
     SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_NAME_STRING, "MePlayer");
@@ -74,7 +76,7 @@ int main(int argc, char* argv[]) {
     topBar->SetButtonColor(255, 255, 255, 255);
 
     // TODO Replace (ALL) constant sizing with dynamic scaling
-    auto *songSelect = new ScrollingFrame(0, 30, 750, 465, 1);
+    auto *songSelect = new ScrollingFrame(0, 30, 750, 465);
     for (const auto &[path, name] : library_handler->GetAllInfo()) {
         // TODO Replace most numbers with user-specified values
         // TODO Find better height than 50
@@ -84,21 +86,20 @@ int main(int argc, char* argv[]) {
         b->SetOnClickEvent(AddToQueue);
     }
 
-    auto *queueFrame = new ScrollingFrame(750, 30, 210, 465, 2);
+    auto *queueFrame = new ScrollingFrame(750, 30, 210, 465);
     playback_queue->SetQueueAddCallback(renderer, queueFrame, AddQueueButton);
 
-    auto *playbackControls = new Frame(175, 465, 785, 75, 0);
+    auto *playbackControls = new Frame(175, 465, 785, 75);
     playbackControls->SetColor(255, 0, 0, 255);
 
-    Track *playback = nullptr;
+    playback = nullptr;
     bool quit = false;
     SDL_Event event;
-    SDL_Texture *trackCoverArt = nullptr; // TODO This currently doesn't work
+    SDL_Texture *trackCoverArt = nullptr;
 
     while (!quit) {
         while (SDL_PollEvent(&event)) {
-            switch (event.type)
-            {
+            switch (event.type) {
                 case SDL_EVENT_QUIT:
                     quit = true;
                     break;
@@ -107,8 +108,15 @@ int main(int argc, char* argv[]) {
                     queueFrame->Scroll(event.wheel.mouse_x, event.wheel.mouse_y, event.wheel.y * SCROLL_SCALE);
                     break;
                 default:
-                    songSelect->HandleEvent(event);
-                    queueFrame->HandleEvent(event);
+                    if (event.type == TRACK_PLAY_EVENT) {
+                        trackCoverArt = SDL_CreateTextureFromSurface(renderer, playback->CoverArt());
+                    } else if (event.type == TRACK_DESTROY_EVENT) {
+                        SDL_DestroyTexture(trackCoverArt);
+                        trackCoverArt = nullptr;
+                    } else {
+                        songSelect->HandleEvent(event);
+                        queueFrame->HandleEvent(event);
+                    }
             }
         }
 
@@ -133,7 +141,7 @@ int main(int argc, char* argv[]) {
         songSelect->Render(renderer);
         queueFrame->Render(renderer);
 
-        if (trackCoverArt != nullptr) { // TODO This currently isn't working NOLINT
+        if (trackCoverArt != nullptr) {
             SDL_FRect dst = {0, 365, 175, 175};
             SDL_RenderTexture(renderer, trackCoverArt, nullptr, &dst);
         }
@@ -151,6 +159,10 @@ int main(int argc, char* argv[]) {
     PlaybackQueue::Close();
     LibraryHandler::Close();
 
+    if (trackCoverArt != nullptr) {
+        SDL_DestroyTexture(trackCoverArt);
+    }
+
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
 
@@ -160,7 +172,7 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-void ScanLibrary(LibraryHandler **lib, const char *path) { // TODO This currently will duplicate directories if handled recursively
+void ScanLibrary(LibraryHandler **lib, const char *path) {
     SDL_PathInfo info;
 
     if (!SDL_GetPathInfo(path, &info)) {
@@ -184,7 +196,9 @@ void ScanLibrary(LibraryHandler **lib, const char *path) { // TODO This currentl
         }
 
         for (int i = 0; i < count; i++) {
-            ScanLibrary(lib, std::string(path).append("/").append(entries[i]).c_str());
+            if (std::string(entries[i]).find_last_of("/\\") == std::string::npos) {
+                ScanLibrary(lib, std::string(path).append("/").append(entries[i]).c_str());
+            }
         }
 
         SDL_free(entries);
@@ -198,10 +212,10 @@ void AddQueueButton(SDL_Renderer *renderer, Frame *frame, const char *trackName,
     b->SetOnClickEvent(PlayInQueue);
 }
 
-void AddToQueue(void *trackName) {
-    LibraryHandler::GetLibraryHandler()->QueueTrack(static_cast<std::string *>(trackName)->c_str());
+void AddToQueue(void *info) {
+    LibraryHandler::GetLibraryHandler()->QueueTrack(static_cast<TextButtonInfo *>(info)->textString.c_str());
 }
 
-void PlayInQueue(void *index) {
-    PlaybackQueue::GetPlaybackQueue()->Play(*static_cast<int *>(index));
+void PlayInQueue(void *info) {
+    PlaybackQueue::GetPlaybackQueue()->Play(&playback, static_cast<TextButtonInfo *>(info)->index);
 }

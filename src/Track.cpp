@@ -9,6 +9,8 @@ extern "C" {
 #include <libswresample/swresample.h>
 }
 
+#include "Events.h"
+
 const SDL_AudioSpec *spec_ref; // I feel very strongly that this is stupid
 
 int progressed_bytes;
@@ -107,6 +109,11 @@ Track::~Track() {
     avcodec_free_context(&codec_context);
 
     avformat_close_input(&format_context);
+
+    SDL_Event event;
+    SDL_zero(event);
+    event.type = TRACK_DESTROY_EVENT;
+    SDL_PushEvent(&event);
 }
 
 void Track::Pause() {
@@ -117,6 +124,10 @@ void Track::Pause() {
 void Track::Play() {
     paused = false;
     SDL_ResumeAudioDevice(device);
+    SDL_Event event;
+    SDL_zero(event);
+    event.type = TRACK_PLAY_EVENT;
+    SDL_PushEvent(&event);
 }
 
 void Track::Restart() {
