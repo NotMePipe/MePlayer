@@ -8,7 +8,7 @@
 TextButton::TextButton(const float x, const float y, const float w, const float h, const float thickness, const char *font, const float textSize)
     : Button{x, y, w, h, thickness} {
     SetFont(font, textSize);
-    index = -1;
+    info.index = -1;
 }
 
 TextButton::~TextButton() {
@@ -41,7 +41,7 @@ void TextButton::SetText(SDL_Renderer *renderer, const char *text) {
 
     SDL_DestroySurface(surface);
 
-    textString = text;
+    info.textString = text;
 }
 
 void TextButton::Render(SDL_Renderer *renderer) {
@@ -50,18 +50,14 @@ void TextButton::Render(SDL_Renderer *renderer) {
     SDL_RenderTexture(renderer, texture, nullptr, &innerRect);
 }
 
-void TextButton::OnClick(const float x, const float y, const int frameType) {
+void TextButton::OnClick(const float x, const float y) {
     if (IsInBounds(x, y)) {
         if (clickEvent != nullptr) {
-            if (frameType == 1) { // TODO I want to do away with frameType
-                clickEvent(&textString);
-            } else if (frameType == 2) {
-                clickEvent(&index);
-            }
+            clickEvent(&info);
         }
     }
 }
 
-void TextButton::AssignIndex(const unsigned int i) {
-    index = i;
+void TextButton::AssignIndex(const int i) {
+    info.index = i;
 }

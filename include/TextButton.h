@@ -7,6 +7,12 @@
 
 #include "Button.h"
 
+typedef struct ButtonInfo {
+    std::string textString;
+    int index;
+} TextButtonInfo;
+
+
 class TextButton : public Button {
 public:
     TextButton(float x, float y, float w, float h, float thickness, const char *font, float textSize);
@@ -20,9 +26,9 @@ public:
 
     void Render(SDL_Renderer *renderer) override;
 
-    void OnClick(float x, float y, int frameType) override;
+    void OnClick(float x, float y) override;
 
-    void AssignIndex(unsigned int i);
+    void AssignIndex(int i);
 
 private:
     TTF_Font *font = nullptr;
@@ -30,9 +36,7 @@ private:
 
     SDL_Color textColor{255, 255, 255, 255};
 
-    std::string textString;
-
-    unsigned int index;
+    TextButtonInfo info{};
 };
 
 #endif //TEXT_BUTTON_H
