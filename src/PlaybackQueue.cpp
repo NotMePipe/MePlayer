@@ -26,14 +26,6 @@ PlaybackQueue::~PlaybackQueue() {
     Clear();
 }
 
-int PlaybackQueue::Play(const int index) {
-    if (currentTrack == nullptr) {
-        return -2;
-    }
-
-    return Play(&currentTrack, index);
-}
-
 int PlaybackQueue::Play(Track **track, const int index) {
     if (index >= queue.size()) {
         return -1;
@@ -85,7 +77,9 @@ void PlaybackQueue::Enqueue(const char *filename) {
 
     if (addCallback != nullptr) {
         const std::string name = filename;
-        addCallback(rend, f, name.substr(name.find_last_of("/\\") + 1).c_str(), static_cast<int>(queue.size()) - 1);
+        const size_t trackName = name.find_last_of("/\\") + 1;
+        const size_t fileExtension = name.rfind('.');
+        addCallback(rend, f, name.substr(trackName, fileExtension - trackName).c_str(), static_cast<int>(queue.size()) - 1);
     }
 }
 

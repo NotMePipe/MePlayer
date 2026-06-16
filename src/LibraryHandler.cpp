@@ -45,7 +45,9 @@ void LibraryHandler::GenerateInfo() {
     library.seekg(0, std::ios::beg);
     std::string line;
     while (std::getline(library, line)) {
-        TrackInfo i{line, line.substr(line.find_last_of("/\\") + 1)};
+        const size_t trackName = line.find_last_of("/\\") + 1;
+        const size_t fileExtension = line.rfind('.');
+        TrackInfo i{line, line.substr(trackName, fileExtension - trackName)};
         info.push_back(i);
     }
 }

@@ -12,7 +12,6 @@ public:
     static PlaybackQueue *GetPlaybackQueue();
     static void Close();
 
-    int Play(int index);
     int Play(Track **track, int index);
     int Next(Track **track);
 
