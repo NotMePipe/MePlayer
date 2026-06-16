@@ -9,7 +9,7 @@
 
 class Frame {
 public:
-    Frame(float x, float y, float w, float h, int frameType = 0);
+    Frame(float x, float y, float w, float h);
     ~Frame();
 
     void Move(float x, float y);
@@ -30,8 +30,6 @@ public:
 private:
     SDL_FRect rect{};
     SDL_Color color{0, 0, 0, 255};
-
-    int type;
 
 protected:
     std::vector<Button *> buttons;

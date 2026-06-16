@@ -5,7 +5,7 @@
 
 class ScrollingFrame : public Frame {
 public:
-    ScrollingFrame(float x, float y, float w, float h, int frameType = 0);
+    ScrollingFrame(float x, float y, float w, float h);
 
     void Scroll(float x, float y, float amount);
 };

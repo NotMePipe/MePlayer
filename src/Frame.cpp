@@ -1,11 +1,9 @@
 #include "Frame.h"
 
-Frame::Frame(const float x, const float y, const float w, const float h, const int frameType)
+Frame::Frame(const float x, const float y, const float w, const float h)
 {
     Move(x, y);
     Resize(w, h);
-
-    type = frameType;
 }
 
 Frame::~Frame() {
@@ -73,7 +71,7 @@ void Frame::HandleEvent(const SDL_Event &e) const {
         case SDL_EVENT_MOUSE_BUTTON_DOWN:
             if (e.button.button == SDL_BUTTON_LEFT) {
                 for (const auto & button : buttons) {
-                    button->OnClick(e.motion.x, e.motion.y, type);
+                    button->OnClick(e.motion.x, e.motion.y);
                 }
             }
             break;

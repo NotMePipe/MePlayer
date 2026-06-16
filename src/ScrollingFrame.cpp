@@ -1,7 +1,7 @@
 #include "ScrollingFrame.h"
 
-ScrollingFrame::ScrollingFrame(const float x, const float y, const float w, const float h, const int frameType)
-    : Frame{x, y, w, h, frameType} {
+ScrollingFrame::ScrollingFrame(const float x, const float y, const float w, const float h)
+    : Frame{x, y, w, h} {
 }
 
 void ScrollingFrame::Scroll(float x, float y, float amount) { // TODO Add bounds
