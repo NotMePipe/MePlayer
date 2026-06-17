@@ -1,5 +1,3 @@
-#define NEW_MAIN
-
 #include <iostream>
 
 #include <SDL3/SDL.h>
@@ -31,6 +29,7 @@ bool playing = true;
 bool restart = false;
 bool skip = false;
 
+// TODO Replace (ALL) constant sizing and positioning with dynamic scaling
 int main(int argc, char* argv[]) {
     SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_NAME_STRING, "MePlayer");
     SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_VERSION_STRING, VERSION);
@@ -83,10 +82,8 @@ int main(int argc, char* argv[]) {
     auto *topBar = new Button(0, 0, 960, 30, -1);
     topBar->SetButtonColor(255, 255, 255, 255);
 
-    // TODO Replace (ALL) constant sizing with dynamic scaling
     auto *songSelect = new ScrollingFrame(0, 30, 750, 465);
     for (const auto &[path, name] : library_handler->GetAllInfo()) {
-        // TODO Replace most numbers with user-specified values
         // TODO Find better height than 50
         const float width = songSelect->GetRect().w / 3;
         auto *b = songSelect->Add(width * static_cast<float>(songSelect->NumChildren() % 3), static_cast<float>(50  * static_cast<int>(songSelect->NumChildren() / 3)), width, 50, 5, "Roboto.ttf", 50);
@@ -99,18 +96,17 @@ int main(int argc, char* argv[]) {
 
     auto *playbackControls = new Frame(175, 465, 785, 75);
     playbackControls->SetColor(255, 0, 0, 255);
-    // TODO I never got the chance to properly scale these
     // TODO These should all become image buttons
     {
-        auto *playPause = playbackControls->Add(playbackControls->GetRect().w / 2, 25.0 / 2, playbackControls->GetRect().w / 5, 50, 5, "Roboto.ttf", 50);
+        auto *playPause = playbackControls->Add(227, 12, 157, 50, 5, "Roboto.ttf", 50);
         playPause->SetText(renderer, "Play/Pause");
         playPause->SetOnClickEvent(PlayPause);
 
-        auto *rr = playbackControls->Add((playbackControls->GetRect().w / 2) - (playbackControls->GetRect().w / 5), 25.0 / 2, playbackControls->GetRect().w / 5, 50, 5, "Roboto.ttf", 50);
+        auto *rr = playbackControls->Add(50, 12, 157, 50, 5, "Roboto.ttf", 50);
         rr->SetText(renderer, "RR");
         rr->SetOnClickEvent(RR);
 
-        auto *ff = playbackControls->Add((playbackControls->GetRect().w / 2) + (playbackControls->GetRect().w / 5), 25.0 / 2, playbackControls->GetRect().w / 5, 50, 5, "Roboto.ttf", 50);
+        auto *ff = playbackControls->Add(404, 12, 157, 50, 5, "Roboto.ttf", 50);
         ff->SetText(renderer, "FF");
         ff->SetOnClickEvent(FF);
     }
