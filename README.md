@@ -21,13 +21,15 @@ A lightweight music player
     - [ ] access queue
       - [x] see queue contents
       - [ ] remove queue contents
+        - [x] functionality
+        - [ ] ui interface
       - [ ] rearrange queue contents (0.4.3)
     - [x] play tracks
     - [ ] playback controls
       - [x] skip tracks
       - [x] pause tracks
       - [x] restart tracks
-      - [ ] previous track (0.4.3)
+      - [x] previous track
       - [ ] jump to time (0.4.3)
     - [x] jump to tracks
     - [x] do not crash when queue ends

@@ -27,7 +27,7 @@ PlaybackQueue::~PlaybackQueue() {
 }
 
 int PlaybackQueue::Play(Track **track, const int index) {
-    if (index >= queue.size()) {
+    if (index >= queue.size() || index < 0) {
         return -1;
     }
 
@@ -80,6 +80,18 @@ void PlaybackQueue::Enqueue(const char *filename) {
         const size_t trackName = name.find_last_of("/\\") + 1;
         const size_t fileExtension = name.rfind('.');
         addCallback(rend, f, name.substr(trackName, fileExtension - trackName).c_str(), static_cast<int>(queue.size()) - 1);
+    }
+}
+
+void PlaybackQueue::Remove(const int index) {
+    if (index == currentIndex && currentTrack != nullptr) {
+        currentTrack->Pause();
+        delete currentTrack;
+        currentTrack = nullptr;
+    }
+
+    if (index < queue.size()) {
+        queue.erase(queue.begin() + index);
     }
 }
 

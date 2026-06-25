@@ -25,8 +25,6 @@ void FF(void *info);
 
 Track *playback;
 // TODO Temporary playback handlers
-bool playing = true;
-bool restart = false;
 bool skip = false;
 
 // TODO Replace (ALL) constant sizing and positioning with dynamic scaling
@@ -126,6 +124,11 @@ int main(int argc, char* argv[]) {
                     songSelect->Scroll(event.wheel.mouse_x, event.wheel.mouse_y, event.wheel.y * SCROLL_SCALE);
                     queueFrame->Scroll(event.wheel.mouse_x, event.wheel.mouse_y, event.wheel.y * SCROLL_SCALE);
                     break;
+                case SDL_EVENT_KEY_DOWN:
+                    if (event.key.scancode == SDL_SCANCODE_DELETE) {
+                        playback_queue->Remove(playback_queue->GetCurrentIndex());
+                    }
+                    break;
                 default:
                     if (event.type == TRACK_PLAY_EVENT) {
                         trackCoverArt = SDL_CreateTextureFromSurface(renderer, playback->CoverArt());
@@ -141,23 +144,14 @@ int main(int argc, char* argv[]) {
         }
 
         if (playback != nullptr) {
-            if (playing && playback->IsPaused()) {
-                playback->Play();
-            } else if (!playing && !playback->IsPaused()) {
-                playback->Pause();
-            }
-
-            if (restart) {
-                restart = false;
-                playback->Restart();
-            }
-
             if (playback->TrackEnded() || skip) {
                 skip = false;
                 playback_queue->Next(&playback);
             }
         } else {
-            playback_queue->Next(&playback);
+            if (playback_queue->Next(&playback) == 0) {
+                playback->Play();
+            }
         }
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -247,13 +241,21 @@ void PlayInQueue(void *info) {
 }
 
 void PlayPause(void *info) {
-    playing = !playing;
+    if (playback->IsPaused()) {
+        playback->Play();
+    } else if (!playback->IsPaused()) {
+        playback->Pause();
+    }
 }
 
 void RR(void *info) {
-    restart = true;
+    if (playback->GetRawPlaybackPosition() < 5) {
+        PlaybackQueue::GetPlaybackQueue()->Play(&playback, PlaybackQueue::GetPlaybackQueue()->GetCurrentIndex() - 1);
+    } else {
+        playback->Restart();
+    }
 }
 
-void FF(void *info) {
+void FF(void *info) { // TODO This function should end the song if at the end of the queue
     skip = true;
 }
