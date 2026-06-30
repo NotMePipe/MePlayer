@@ -99,6 +99,7 @@ SDL_FRect Button::GetFill() const {
     return innerRect;
 }
 
-void Button::SetOnClickEvent(void (*event)(void *)) {
+void Button::SetOnClickEvent(void (*event)(void *), void *userdata) {
     clickEvent = event;
+    data = userdata;
 }

@@ -53,6 +53,7 @@ void TextButton::Render(SDL_Renderer *renderer) {
 void TextButton::OnClick(const float x, const float y) {
     if (IsInBounds(x, y)) {
         if (clickEvent != nullptr) {
+            info.userdata = data;
             clickEvent(&info);
         }
     }

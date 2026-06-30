@@ -10,8 +10,8 @@
 typedef struct ButtonInfo {
     std::string textString;
     int index;
+    void *userdata; // TODO This is here just to keep things working until parents are fully supported
 } TextButtonInfo;
-
 
 class TextButton : public Button {
 public:

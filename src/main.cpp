@@ -18,6 +18,7 @@ void ScanLibrary(LibraryHandler **lib, const char *path);
 void AddQueueButton(SDL_Renderer *renderer, Frame *frame, const char *trackName, int index);
 void AddToQueue(void *info);
 void PlayInQueue(void *info);
+void RemoveFromQueue(void *info);
 // TODO These need overhauled
 void PlayPause(void *info);
 void RR(void *info);
@@ -86,7 +87,7 @@ int main(int argc, char* argv[]) {
         const float width = songSelect->GetRect().w / 3;
         auto *b = songSelect->Add(width * static_cast<float>(songSelect->NumChildren() % 3), static_cast<float>(50  * static_cast<int>(songSelect->NumChildren() / 3)), width, 50, 5, "Roboto.ttf", 50);
         b->SetText(renderer, name.c_str());
-        b->SetOnClickEvent(AddToQueue);
+        b->SetOnClickEvent(AddToQueue, nullptr); // TODO Determine if nullptr
     }
 
     auto *queueFrame = new ScrollingFrame(750, 30, 210, 465);
@@ -98,15 +99,15 @@ int main(int argc, char* argv[]) {
     {
         auto *playPause = playbackControls->Add(227, 12, 157, 50, 5, "Roboto.ttf", 50);
         playPause->SetText(renderer, "Play/Pause");
-        playPause->SetOnClickEvent(PlayPause);
+        playPause->SetOnClickEvent(PlayPause, nullptr); // TODO Determine if nullptr
 
         auto *rr = playbackControls->Add(50, 12, 157, 50, 5, "Roboto.ttf", 50);
         rr->SetText(renderer, "RR");
-        rr->SetOnClickEvent(RR);
+        rr->SetOnClickEvent(RR, nullptr); // TODO Determine if nullptr
 
         auto *ff = playbackControls->Add(404, 12, 157, 50, 5, "Roboto.ttf", 50);
         ff->SetText(renderer, "FF");
-        ff->SetOnClickEvent(FF);
+        ff->SetOnClickEvent(FF, nullptr);  // TODO Determine if nullptr
     }
 
     playback = nullptr;
@@ -124,9 +125,11 @@ int main(int argc, char* argv[]) {
                     songSelect->Scroll(event.wheel.mouse_x, event.wheel.mouse_y, event.wheel.y * SCROLL_SCALE);
                     queueFrame->Scroll(event.wheel.mouse_x, event.wheel.mouse_y, event.wheel.y * SCROLL_SCALE);
                     break;
-                case SDL_EVENT_KEY_DOWN:
+                case SDL_EVENT_KEY_DOWN: // TODO Remove when parenting is added
                     if (event.key.scancode == SDL_SCANCODE_DELETE) {
                         playback_queue->Remove(playback_queue->GetCurrentIndex());
+                        playback_queue->Next(&playback);
+                        queueFrame->Remove(0);
                     }
                     break;
                 default:
@@ -229,18 +232,42 @@ void AddQueueButton(SDL_Renderer *renderer, Frame *frame, const char *trackName,
     auto *b = frame->Add(0, static_cast<float>(50 * frame->NumChildren()), frame->GetRect().w, 50, 5, "Roboto.ttf", 50);
     b->SetText(renderer, trackName);
     b->AssignIndex(index);
-    b->SetOnClickEvent(PlayInQueue);
+    b->SetOnClickEvent(PlayInQueue, nullptr);  // TODO Determine if nullptr
+    // TODO Probably introduce a method of parenting buttons to each other
+    // TODO This is literally commented out because of how broken it is without parenting. It works, but not enough for me to even put in a dev build
+    // auto *x = frame->Add(frame->GetRect().w - 50, b->GetFill().y, 50, 50, 5, "Roboto.ttf", 50);
+    // x->SetText(renderer, "X");
+    // x->AssignIndex(index);
+    // x->SetOnClickEvent(RemoveFromQueue, frame);
 }
 
 void AddToQueue(void *info) {
     LibraryHandler::GetLibraryHandler()->QueueTrack(static_cast<TextButtonInfo *>(info)->textString.c_str());
+    if (PlaybackQueue::GetPlaybackQueue()->GetQueueLength() == 1) {
+        PlaybackQueue::GetPlaybackQueue()->Play(&playback, 0);
+    }
 }
 
 void PlayInQueue(void *info) {
     PlaybackQueue::GetPlaybackQueue()->Play(&playback, static_cast<TextButtonInfo *>(info)->index);
 }
 
+// TODO This whole thing is extremely buggy and broken, mostly because of the lack of parenting
+void RemoveFromQueue(void *info) {
+    const int index = static_cast<TextButtonInfo *>(info)->index;
+    auto *frame = static_cast<Frame *>(static_cast<TextButtonInfo *>(info)->userdata);
+    PlaybackQueue::GetPlaybackQueue()->Remove(index);
+    PlaybackQueue::GetPlaybackQueue()->Next(&playback);
+    // TODO Need to remove same index twice since X is a child of frame rather than a child of the button being removed
+    frame->Remove(index);
+    frame->Remove(index);
+}
+
 void PlayPause(void *info) {
+    if (playback == nullptr) {
+        return;
+    }
+
     if (playback->IsPaused()) {
         playback->Play();
     } else if (!playback->IsPaused()) {
@@ -249,6 +276,10 @@ void PlayPause(void *info) {
 }
 
 void RR(void *info) {
+    if (playback == nullptr) {
+        return;
+    }
+
     if (playback->GetRawPlaybackPosition() < 5) {
         PlaybackQueue::GetPlaybackQueue()->Play(&playback, PlaybackQueue::GetPlaybackQueue()->GetCurrentIndex() - 1);
     } else {
