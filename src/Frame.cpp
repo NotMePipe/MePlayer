@@ -49,6 +49,13 @@ TextButton *Frame::Add(const float x, const float y, const float w, const float 
     return b;
 }
 
+void Frame::Remove(const int index) {
+    if (index < buttons.size()) {
+        delete buttons.at(index);
+        buttons.erase(buttons.begin() + index);
+    }
+}
+
 void Frame::Render(SDL_Renderer *renderer) const {
     SDL_Color restore;
     SDL_GetRenderDrawColor(renderer, &restore.r, &restore.g, &restore.b, &restore.a);

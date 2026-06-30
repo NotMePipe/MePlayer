@@ -19,6 +19,8 @@ public:
     Button *Add(float x, float y, float w, float h, float thickness);
     TextButton *Add(float x, float y, float w, float h, float thickness, const char *font, float textSize);
 
+    void Remove(int index);
+
     void Render(SDL_Renderer *renderer) const;
 
     void HandleEvent(const SDL_Event &e) const;
