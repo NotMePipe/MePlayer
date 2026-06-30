@@ -25,6 +25,8 @@ public:
     void Repeat(bool toggle);
     void Repeat(unsigned int index);
 
+    [[nodiscard]] int GetQueueLength() const;
+
     void SetQueueAddCallback(SDL_Renderer *renderer, Frame *frame, void (*callback)(SDL_Renderer *, Frame *, const char *, int));
 private:
     static PlaybackQueue *sInstance;

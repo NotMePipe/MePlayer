@@ -92,6 +92,7 @@ void PlaybackQueue::Remove(const int index) {
 
     if (index < queue.size()) {
         queue.erase(queue.begin() + index);
+        currentIndex = index - 1;
     }
 }
 
@@ -122,6 +123,10 @@ void PlaybackQueue::Repeat(const unsigned int index) {
     if (index < queue.size()) {
         repeat = static_cast<int>(index);
     }
+}
+
+int PlaybackQueue::GetQueueLength() const {
+    return static_cast<int>(queue.size());
 }
 
 void PlaybackQueue::SetQueueAddCallback(SDL_Renderer *renderer, Frame *frame, void (*callback)(SDL_Renderer *, Frame *, const char *, int)) {
