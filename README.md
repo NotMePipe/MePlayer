@@ -5,11 +5,11 @@ A lightweight music player
 This branch is to follow the development and implementation of a proper asset parent system
 
 Namely:
-- [ ] Frames need to be able to parent buttons
-- [ ] Frames need to be able to parent frames
-- [ ] Buttons need to be able to parent buttons
-- [ ] Children need to be able to reference their parents
-- [ ] Parents need to be able to reference their children
-- [ ] Upon update (resize, move, etc.) of a parent, the child needs to react
+- [x] Frames need to be able to parent buttons
+- [x] Frames need to be able to parent frames
+- [x] Buttons need to be able to parent buttons
+- [x] Children need to be able to reference their parents
+- [x] Parents need to be able to reference their children
+- [x] Upon update (resize, move, etc.) of a parent, the child needs to react
 - [ ] Upon removal of a child, a parent needs to know
-- [ ] Upon removal of a parent, a child needs to be removed
+- [x] Upon removal of a parent, a child needs to be removed
