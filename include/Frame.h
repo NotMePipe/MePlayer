@@ -3,38 +3,49 @@
 
 #include <vector>
 
-#include <SDL3/SDL_rect.h>
+#include <SDL3/SDL_video.h>
+#include <SDL3/SDL_render.h>
+#include <SDL3/SDL_events.h>
 
-#include "TextButton.h"
+typedef struct ScaleOffset {
+    float scale;
+    float offset;
+} ScaleOffset;
 
 class Frame {
 public:
-    Frame(float x, float y, float w, float h);
-    ~Frame();
+    Frame(SDL_Window *window, ScaleOffset x, ScaleOffset y, ScaleOffset w, ScaleOffset h);
+    Frame(Frame *parent, ScaleOffset x, ScaleOffset y, ScaleOffset w, ScaleOffset h);
+    virtual ~Frame();
 
-    void Move(float x, float y);
-    void Resize(float w, float h);
+    virtual void Move(ScaleOffset x, ScaleOffset y);
+    virtual void Resize(ScaleOffset w, ScaleOffset h);
+
     void SetColor(Uint8 r, Uint8 g, Uint8 b, Uint8 a);
 
-    Button *Add(float x, float y, float w, float h, float thickness);
-    TextButton *Add(float x, float y, float w, float h, float thickness, const char *font, float textSize);
+    void AddChild(Frame *child);
+    void RemoveChild(int index);
 
-    void Remove(int index);
+    virtual void Render(SDL_Renderer *renderer);
 
-    void Render(SDL_Renderer *renderer) const;
-
-    void HandleEvent(const SDL_Event &e) const;
+    virtual void HandleEvent(const SDL_Event &e);
 
     [[nodiscard]] unsigned int NumChildren() const;
 
     [[nodiscard]] SDL_FRect GetRect() const;
 
 private:
+    Frame *parent;
+    SDL_Window *window;
+
+    void SetPos(float x, float y);
+    void SetSize(float w, float h);
+
+protected:
     SDL_FRect rect{};
     SDL_Color color{0, 0, 0, 255};
 
-protected:
-    std::vector<Button *> buttons;
+    std::vector<Frame *> children;
 
     [[nodiscard]] bool IsInBounds(float x, float y) const;
 };

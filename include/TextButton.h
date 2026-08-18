@@ -15,7 +15,8 @@ typedef struct ButtonInfo {
 
 class TextButton : public Button {
 public:
-    TextButton(float x, float y, float w, float h, float thickness, const char *font, float textSize);
+    TextButton(SDL_Window *window, ScaleOffset x, ScaleOffset y, ScaleOffset w, ScaleOffset h, float thickness, const char *font, float textSize);
+    TextButton(Frame *parent, ScaleOffset x, ScaleOffset y, ScaleOffset w, ScaleOffset h, float thickness, const char *font, float textSize);
     ~TextButton() override;
 
     void SetTextColor(Uint8 r, Uint8 g, Uint8 b, Uint8 a);

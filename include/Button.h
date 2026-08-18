@@ -1,17 +1,18 @@
 #ifndef BUTTON_H
 #define BUTTON_H
 
-#include <SDL3/SDL_render.h>
+#include "Frame.h"
 
-class Button {
+class Button : public Frame {
 public:
-    Button(float x, float y, float w, float h, float thickness);
-    virtual ~Button() = default;
+    Button(SDL_Window *window, ScaleOffset x, ScaleOffset y, ScaleOffset w, ScaleOffset h, float thickness);
+    Button(Frame *parent, ScaleOffset x, ScaleOffset y, ScaleOffset w, ScaleOffset h, float thickness);
+    ~Button() override = default;
 
-    virtual void Render(SDL_Renderer *renderer);
+    void Render(SDL_Renderer *renderer) override;
 
-    void SetPos(float newX, float newY);
-    void SetSize(float newW, float newH);
+    void Move(ScaleOffset x, ScaleOffset y) override;
+    void Resize(ScaleOffset w, ScaleOffset h) override;
 
     void SetButtonColor(Uint8 r, Uint8 g, Uint8 b, Uint8 a);
     void SetBorderColor(Uint8 r, Uint8 g, Uint8 b, Uint8 a);
@@ -28,6 +29,8 @@ public:
     [[nodiscard]] SDL_FRect GetBorder() const;
     [[nodiscard]] SDL_FRect GetFill() const;
 
+    void HandleEvent(const SDL_Event &e) override;
+
     void SetOnClickEvent(void (*event)(void *), void *userdata);
 
 private:
@@ -43,8 +46,6 @@ private:
 protected:
     SDL_FRect borderRect{};
     SDL_FRect innerRect{};
-
-    [[nodiscard]] bool IsInBounds(float x, float y) const;
 
     void (*clickEvent)(void *) = nullptr;
     void *data = nullptr;

@@ -1,99 +1,156 @@
 #include "Frame.h"
 
-Frame::Frame(const float x, const float y, const float w, const float h)
+#include "Utils.h"
+
+Frame::Frame(SDL_Window *window, const ScaleOffset x, const ScaleOffset y, const ScaleOffset w, const ScaleOffset h)
 {
-    Move(x, y);
-    Resize(w, h);
+    this->window = window;
+    parent = nullptr;
+    Frame::Move(x, y);
+    Frame::Resize(w, h);
 }
 
-Frame::~Frame() {
-    for (auto &button : buttons) {
-        delete button;
-        button = nullptr;
+Frame::Frame(Frame *parent, const ScaleOffset x, const ScaleOffset y, const ScaleOffset w, const ScaleOffset h)
+{
+    window = nullptr;
+    this->parent = parent;
+    parent->AddChild(this);
+    Frame::Move(x, y);
+    Frame::Resize(w, h);
+}
+
+Frame::~Frame()
+{
+    for (const auto &child : children)
+    {
+        delete child;
     }
 
-    buttons.clear();
-    buttons.shrink_to_fit();
+    children.clear();
 }
 
-void Frame::Move(const float x, const float y) {
+void Frame::SetPos(const float x, const float y)
+{
     rect.x = x;
     rect.y = y;
-
-    for (const auto &button : buttons) {
-        button->SetPos(x + button->GetBorder().x, y + button->GetBorder().y);
-    }
 }
 
-void Frame::Resize(const float w, const float h) {
+void Frame::SetSize(const float w, const float h)
+{
     rect.w = w;
     rect.h = h;
 }
 
-void Frame::SetColor(const Uint8 r, const Uint8 g, const Uint8 b, const Uint8 a) {
+void Frame::Move(const ScaleOffset x, const ScaleOffset y)
+{
+    float targetX, targetY;
+    if (parent == nullptr)
+    {
+        targetX = (static_cast<float>(SCREEN_WIDTH) * x.scale) + x.offset;
+        targetY = (static_cast<float>(SCREEN_HEIGHT) * y.scale) + y.offset;
+    }
+    else
+    {
+        targetX = parent->rect.x + (parent->rect.w * x.scale) + x.offset;
+        targetY = parent->rect.y + (parent->rect.h * y.scale) + y.offset;
+    }
+
+    for (const auto &child : children)
+    {
+        const float deltaX = child->rect.x - rect.x;
+        const float deltaY = child->rect.y - rect.y;
+
+        child->SetPos(targetX + deltaX, targetY + deltaY);
+    }
+
+    rect.x = targetX;
+    rect.y = targetY;
+}
+
+void Frame::Resize(const ScaleOffset w, const ScaleOffset h)
+{
+    float targetW, targetH;
+    if (parent == nullptr)
+    {
+        targetW = (static_cast<float>(SCREEN_WIDTH) * w.scale) + w.offset;
+        targetH = (static_cast<float>(SCREEN_HEIGHT) * h.scale) + h.offset;
+    }
+    else
+    {
+        targetW = (parent->rect.w * w.scale) + w.offset;
+        targetH = (parent->rect.h * h.scale) + h.offset;
+    }
+
+    for (const auto &child : children)
+    {
+        const float percentW = child->rect.w / rect.w;
+        const float percentH = child->rect.h / rect.h;
+
+        const float relX = (child->rect.x - rect.x) / rect.w;
+        const float relY = (child->rect.y - rect.y) / rect.h;
+
+        child->SetSize(targetW * percentW, targetH * percentH);
+        child->SetPos(rect.x + relX * targetW, rect.y + relY * targetH);
+    }
+
+    rect.w = targetW;
+    rect.h = targetH;
+}
+
+void Frame::SetColor(const Uint8 r, const Uint8 g, const Uint8 b, const Uint8 a)
+{
     color.r = r;
     color.g = g;
     color.b = b;
     color.a = a;
 }
 
-Button *Frame::Add(const float x, const float y, const float w, const float h, const float thickness) {
-    auto *b = new Button(x + rect.x, y + rect.y, w, h, thickness);
-    buttons.push_back(b);
-    return b;
+void Frame::AddChild(Frame *child)
+{
+    children.push_back(child);
 }
 
-TextButton *Frame::Add(const float x, const float y, const float w, const float h, const float thickness, const char *font, const float textSize) {
-    auto *b = new TextButton(x + rect.x, y + rect.y, w, h, thickness, font, textSize);
-    buttons.push_back(b);
-    return b;
-}
-
-void Frame::Remove(const int index) {
-    if (index < buttons.size()) {
-        delete buttons.at(index);
-        buttons.erase(buttons.begin() + index);
+void Frame::RemoveChild(const int index)
+{
+    if (index < children.size())
+    {
+        delete children.at(index);
+        children.erase(children.begin() + index);
     }
 }
 
-void Frame::Render(SDL_Renderer *renderer) const {
+void Frame::Render(SDL_Renderer *renderer)
+{
     SDL_Color restore;
     SDL_GetRenderDrawColor(renderer, &restore.r, &restore.g, &restore.b, &restore.a);
     SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
     SDL_RenderFillRect(renderer, &rect);
     SDL_SetRenderDrawColor(renderer, restore.r, restore.g, restore.b, restore.a);
-    for (const auto &button : buttons) {
-        button->Render(renderer);
-    }
-}
-
-void Frame::HandleEvent(const SDL_Event &e) const {
-    switch (e.type)
+    for (const auto &child : children)
     {
-        case SDL_EVENT_MOUSE_MOTION:
-            for (const auto & button : buttons) {
-                button->Hover(e.motion.x, e.motion.y);
-            }
-            break;
-        case SDL_EVENT_MOUSE_BUTTON_DOWN:
-            if (e.button.button == SDL_BUTTON_LEFT) {
-                for (const auto & button : buttons) {
-                    button->OnClick(e.motion.x, e.motion.y);
-                }
-            }
-            break;
-        default: ;
+        child->Render(renderer);
     }
 }
 
-unsigned int Frame::NumChildren() const {
-    return static_cast<unsigned int>(buttons.size());
+void Frame::HandleEvent(const SDL_Event &e)
+{
+    for (const auto &child : children)
+    {
+        child->HandleEvent(e);
+    }
 }
 
-SDL_FRect Frame::GetRect() const {
+unsigned int Frame::NumChildren() const
+{
+    return static_cast<unsigned int>(children.size());
+}
+
+SDL_FRect Frame::GetRect() const
+{
     return rect;
 }
 
-bool Frame::IsInBounds(const float x, const float y) const {
+bool Frame::IsInBounds(const float x, const float y) const
+{
     return (x > rect.x && x < rect.x + rect.w) && (y > rect.y && y < rect.y + rect.h);
 }

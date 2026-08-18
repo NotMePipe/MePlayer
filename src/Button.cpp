@@ -1,105 +1,154 @@
 #include "Button.h"
 
-Button::Button(const float x, const float y, const float w, const float h, const float thickness) {
-    SetPos(x, y);
-    SetSize(w, h);
+Button::Button(SDL_Window *window, ScaleOffset x, ScaleOffset y, ScaleOffset w, ScaleOffset h, float thickness)
+    : Frame(window, x, y, w, h)
+{
     SetBorderThickness(thickness);
-    
+
     activeFill = &buttonColor;
     activeBorder = &borderColor;
 }
 
-void Button::Render(SDL_Renderer *renderer) {
+Button::Button(Frame *parent, ScaleOffset x, ScaleOffset y, ScaleOffset w, ScaleOffset h, float thickness)
+    : Frame(parent, x, y, w, h)
+{
+    SetBorderThickness(thickness);
+
+    activeFill = &buttonColor;
+    activeBorder = &borderColor;
+}
+
+void Button::Render(SDL_Renderer *renderer)
+{
     SDL_Color restore;
     SDL_GetRenderDrawColor(renderer, &restore.r, &restore.g, &restore.b, &restore.a);
     SDL_SetRenderDrawColor(renderer, activeBorder->r, activeBorder->g, activeBorder->b, activeBorder->a);
-    SDL_RenderFillRect(renderer, &borderRect);
+    SDL_RenderFillRect(renderer, &rect);
     SDL_SetRenderDrawColor(renderer, activeFill->r, activeFill->g, activeFill->b, activeFill->a);
     SDL_RenderFillRect(renderer, &innerRect);
     SDL_SetRenderDrawColor(renderer, restore.r, restore.g, restore.b, restore.a);
+    for (const auto &child : children)
+    {
+        child->Render(renderer);
+    }
 }
 
-void Button::SetPos(const float newX, const float newY) {
-    const float x = innerRect.x - borderRect.x;
-    const float y = innerRect.y - borderRect.y;
-    borderRect.x = newX;
-    borderRect.y = newY;
-    innerRect.x = newX + x;
-    innerRect.y = newY + y;
+void Button::Move(const ScaleOffset x, const ScaleOffset y)
+{
+    const float deltaX = innerRect.x - rect.x;
+    const float deltaY = innerRect.y - rect.y;
+
+    Frame::Move(x, y);
+
+    innerRect.x = rect.x + deltaX;
+    innerRect.y = rect.y + deltaY;
 }
 
-void Button::SetSize(const float newW, const float newH) {
-    const float thick = (borderRect.w - innerRect.w) / 2;
-    borderRect.w = newW;
-    borderRect.h = newH;
+void Button::Resize(const ScaleOffset w, const ScaleOffset h)
+{
+    const float thick = (rect.w - innerRect.w) / 2;
+
+    Frame::Resize(w, h);
+
     SetBorderThickness(thick);
 }
 
-void Button::SetButtonColor(const Uint8 r,const Uint8 g,const Uint8 b,const Uint8 a) {
+void Button::SetButtonColor(const Uint8 r, const Uint8 g, const Uint8 b, const Uint8 a)
+{
     buttonColor.r = r;
     buttonColor.g = g;
     buttonColor.b = b;
     buttonColor.a = a;
 }
 
-void Button::SetBorderColor(const Uint8 r,const Uint8 g,const Uint8 b,const Uint8 a) {
+void Button::SetBorderColor(const Uint8 r, const Uint8 g, const Uint8 b, const Uint8 a)
+{
     borderColor.r = r;
     borderColor.g = g;
     borderColor.b = b;
     borderColor.a = a;
 }
 
-void Button::SetButtonHoverColor(const Uint8 r,const Uint8 g,const Uint8 b,const Uint8 a) {
+void Button::SetButtonHoverColor(const Uint8 r, const Uint8 g, const Uint8 b, const Uint8 a)
+{
     buttonHoverColor.r = r;
     buttonHoverColor.g = g;
     buttonHoverColor.b = b;
     buttonHoverColor.a = a;
 }
 
-void Button::SetBorderHoverColor(const Uint8 r,const Uint8 g,const Uint8 b,const Uint8 a) {
+void Button::SetBorderHoverColor(const Uint8 r, const Uint8 g, const Uint8 b, const Uint8 a)
+{
     borderHoverColor.r = r;
     borderHoverColor.g = g;
     borderHoverColor.b = b;
     borderHoverColor.a = a;
 }
 
-void Button::SetBorderThickness(const float newThick) {
-    if (newThick < 0) {
-        innerRect.x = borderRect.x;
-        innerRect.y = borderRect.y;
-        innerRect.w = borderRect.w;
-        innerRect.h = borderRect.h;
-    } else {
-        innerRect.x = borderRect.x + newThick;
-        innerRect.y = borderRect.y + newThick;
-        innerRect.w = borderRect.w - (newThick * 2);
-        innerRect.h = borderRect.h - (newThick * 2);
+void Button::SetBorderThickness(const float newThick)
+{
+    if (newThick < 0)
+    {
+        innerRect.x = rect.x;
+        innerRect.y = rect.y;
+        innerRect.w = rect.w;
+        innerRect.h = rect.h;
+    }
+    else
+    {
+        innerRect.x = rect.x + newThick;
+        innerRect.y = rect.y + newThick;
+        innerRect.w = rect.w - (newThick * 2);
+        innerRect.h = rect.h - (newThick * 2);
     }
 }
 
-bool Button::IsInBounds(const float x, const float y) const {
-     return (x > borderRect.x && x < borderRect.x + borderRect.w) && (y > borderRect.y && y < borderRect.y + borderRect.h);
-}
-
-void Button::Hover(const float x, const float y) {
-    if (IsInBounds(x, y)) {
+void Button::Hover(const float x, const float y)
+{
+    if (IsInBounds(x, y))
+    {
         activeFill = &buttonHoverColor;
         activeBorder = &borderHoverColor;
-    } else {
+    }
+    else
+    {
         activeFill = &buttonColor;
         activeBorder = &borderColor;
     }
 }
 
-SDL_FRect Button::GetBorder() const {
-    return borderRect;
+SDL_FRect Button::GetBorder() const
+{
+    return GetRect();
 }
 
-SDL_FRect Button::GetFill() const {
+SDL_FRect Button::GetFill() const
+{
     return innerRect;
 }
 
-void Button::SetOnClickEvent(void (*event)(void *), void *userdata) {
+void Button::HandleEvent(const SDL_Event &e)
+{
+    if (e.type == SDL_EVENT_MOUSE_MOTION)
+    {
+        Hover(e.motion.x, e.motion.y);
+    }
+    else if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
+    {
+        if (e.button.button == SDL_BUTTON_LEFT)
+        {
+            OnClick(e.motion.x, e.motion.y);
+        }
+    }
+
+    for (const auto &child : children)
+    {
+        child->HandleEvent(e);
+    }
+}
+
+void Button::SetOnClickEvent(void (*event)(void *), void *userdata)
+{
     clickEvent = event;
     data = userdata;
 }

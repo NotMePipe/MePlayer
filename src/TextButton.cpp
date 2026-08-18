@@ -5,8 +5,16 @@
 #include "LibraryHandler.h"
 #include "PlaybackQueue.h"
 
-TextButton::TextButton(const float x, const float y, const float w, const float h, const float thickness, const char *font, const float textSize)
-    : Button{x, y, w, h, thickness} {
+TextButton::TextButton(SDL_Window *window, ScaleOffset x, ScaleOffset y, ScaleOffset w, ScaleOffset h, float thickness, const char *font, float textSize)
+    : Button{window, x, y, w, h, thickness}
+{
+    SetFont(font, textSize);
+    info.index = -1;
+}
+
+TextButton::TextButton(Frame *parent, ScaleOffset x, ScaleOffset y, ScaleOffset w, ScaleOffset h, float thickness, const char *font, float textSize)
+    : Button{parent, x, y, w, h, thickness}
+{
     SetFont(font, textSize);
     info.index = -1;
 }
