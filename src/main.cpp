@@ -85,8 +85,6 @@ int main(int argc, char* argv[])
                 case SDL_EVENT_WINDOW_RESIZED:
                     SDL_GetWindowSizeInPixels(window, &SCREEN_WIDTH, &SCREEN_HEIGHT);
                     break;
-                case SDL_EVENT_MOUSE_WHEEL:
-                    sf->Scroll(event.wheel.mouse_x, event.wheel.mouse_y, event.wheel.y * SCROLL_SCALE);
                 default:
                     sf->HandleEvent(event);
                     break;

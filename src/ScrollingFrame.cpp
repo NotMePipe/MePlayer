@@ -15,6 +15,8 @@ void ScrollingFrame::Scroll(float x, float y, float amount) { // TODO Add bounds
             // Current theory is to store the ScaleOffset data and directly modify that
             // I stopped early because that would encourage redoing the Move and Resize logic (again) and I wanted to commit first
             //child->SetPos(child->GetRect().x, child->GetRect().y + amount);
+            auto [scale, offset] = child->GetPosition()[1];
+            child->Move(child->GetPosition()[0], {scale, offset + amount});
         }
     }
 }

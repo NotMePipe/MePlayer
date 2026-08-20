@@ -29,18 +29,6 @@ Frame::~Frame()
     children.clear();
 }
 
-void Frame::SetPos(const float x, const float y)
-{
-    rect.x = x;
-    rect.y = y;
-}
-
-void Frame::SetSize(const float w, const float h)
-{
-    rect.w = w;
-    rect.h = h;
-}
-
 void Frame::Move(const ScaleOffset x, const ScaleOffset y)
 {
     float targetX, targetY;
@@ -55,16 +43,16 @@ void Frame::Move(const ScaleOffset x, const ScaleOffset y)
         targetY = parent->rect.y + (parent->rect.h * y.scale) + y.offset;
     }
 
-    for (const auto &child : children)
-    {
-        const float deltaX = child->rect.x - rect.x;
-        const float deltaY = child->rect.y - rect.y;
-
-        child->SetPos(targetX + deltaX, targetY + deltaY);
-    }
-
     rect.x = targetX;
     rect.y = targetY;
+
+    position[0] = x;
+    position[1] = y;
+
+    for (const auto &child : children)
+    {
+        child->Move(child->position[0], child->position[1]);
+    }
 }
 
 void Frame::Resize(const ScaleOffset w, const ScaleOffset h)
@@ -81,20 +69,17 @@ void Frame::Resize(const ScaleOffset w, const ScaleOffset h)
         targetH = (parent->rect.h * h.scale) + h.offset;
     }
 
-    for (const auto &child : children)
-    {
-        const float percentW = child->rect.w / rect.w;
-        const float percentH = child->rect.h / rect.h;
-
-        const float relX = (child->rect.x - rect.x) / rect.w;
-        const float relY = (child->rect.y - rect.y) / rect.h;
-
-        child->SetSize(targetW * percentW, targetH * percentH);
-        child->SetPos(rect.x + relX * targetW, rect.y + relY * targetH);
-    }
-
     rect.w = targetW;
     rect.h = targetH;
+
+    size[0] = w;
+    size[1] = h;
+
+    for (const auto &child : children)
+    {
+        child->Resize(child->size[0], child->size[1]);
+        child->Move(child->position[0], child->position[1]);
+    }
 }
 
 void Frame::SetColor(const Uint8 r, const Uint8 g, const Uint8 b, const Uint8 a)
@@ -148,6 +133,14 @@ unsigned int Frame::NumChildren() const
 SDL_FRect Frame::GetRect() const
 {
     return rect;
+}
+
+ScaleOffset *Frame::GetPosition() {
+    return position;
+}
+
+ScaleOffset *Frame::GetSize() {
+    return size;
 }
 
 bool Frame::IsInBounds(const float x, const float y) const

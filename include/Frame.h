@@ -34,18 +34,21 @@ public:
 
     [[nodiscard]] SDL_FRect GetRect() const;
 
+    ScaleOffset *GetPosition();
+    ScaleOffset *GetSize();
+
 private:
     Frame *parent;
     SDL_Window *window;
-
-    void SetPos(float x, float y);
-    void SetSize(float w, float h);
 
 protected:
     SDL_FRect rect{};
     SDL_Color color{0, 0, 0, 255};
 
     std::vector<Frame *> children;
+
+    ScaleOffset position[2] = {};
+    ScaleOffset size[2] = {};
 
     [[nodiscard]] bool IsInBounds(float x, float y) const;
 };
