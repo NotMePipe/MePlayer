@@ -10,17 +10,17 @@ add_executable(${PROJECT_NAME}
         src/LibraryHandler.cpp
         src/Button.cpp
         src/TextButton.cpp
+        src/Frame.cpp
+        src/ScrollingFrame.cpp
+        src/Utils.cpp
         include/Track.h
         include/PlaybackQueue.h
         include/LibraryHandler.h
         include/Button.h
         include/TextButton.h
         include/Frame.h
-        src/Frame.cpp
-        src/ScrollingFrame.cpp
         include/ScrollingFrame.h
-        include/Events.h
-        src/Events.cpp
+        include/Utils.h
 )
 
 # I feel like this probably isn't a great practice
