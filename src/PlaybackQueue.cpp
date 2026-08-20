@@ -2,38 +2,47 @@
 
 PlaybackQueue *PlaybackQueue::sInstance;
 
-PlaybackQueue *PlaybackQueue::GetPlaybackQueue() {
-    if (sInstance == nullptr) {
+PlaybackQueue *PlaybackQueue::GetPlaybackQueue()
+{
+    if (sInstance == nullptr)
+    {
         sInstance = new PlaybackQueue();
     }
     return sInstance;
 }
 
-void PlaybackQueue::Close() {
-    if (sInstance == nullptr) {
+void PlaybackQueue::Close()
+{
+    if (sInstance == nullptr)
+    {
         return;
     }
     delete sInstance;
     sInstance = nullptr;
 }
 
-PlaybackQueue::PlaybackQueue() {
+PlaybackQueue::PlaybackQueue()
+{
     currentIndex = -1;
     queue = {};
 }
 
-PlaybackQueue::~PlaybackQueue() {
+PlaybackQueue::~PlaybackQueue()
+{
     Clear();
 }
 
-int PlaybackQueue::Play(Track **track, const int index) {
-    if (index >= queue.size() || index < 0) {
+int PlaybackQueue::Play(Track **track, const int index)
+{
+    if (index >= queue.size() || index < 0)
+    {
         return -1;
     }
 
     currentIndex = index;
 
-    if (currentTrack != nullptr) {
+    if (currentTrack != nullptr)
+    {
         delete currentTrack;
         currentTrack = nullptr;
         *track = nullptr;
@@ -45,17 +54,22 @@ int PlaybackQueue::Play(Track **track, const int index) {
     return 0;
 }
 
-int PlaybackQueue::Next(Track **track) {
-    if (repeat == -1) {
-        if (Play(track, ++currentIndex) < 0) {
+int PlaybackQueue::Next(Track **track)
+{
+    if (repeat == -1)
+    {
+        if (Play(track, ++currentIndex) < 0)
+        {
             --currentIndex;
             return -1;
         }
         return 0;
     }
 
-    if (repeat == -2) {
-        if (++currentIndex >= queue.size()) {
+    if (repeat == -2)
+    {
+        if (++currentIndex >= queue.size())
+        {
             currentIndex = 0;
         }
         return Play(track, currentIndex);
@@ -65,17 +79,21 @@ int PlaybackQueue::Next(Track **track) {
     return 0;
 }
 
-int PlaybackQueue::GetCurrentIndex() const {
+int PlaybackQueue::GetCurrentIndex() const
+{
     return currentIndex;
 }
 
-void PlaybackQueue::Enqueue(const char *filename) {
-    if (queue.size() == queue.capacity()) {
+void PlaybackQueue::Enqueue(const char *filename)
+{
+    if (queue.size() == queue.capacity())
+    {
         queue.reserve(queue.capacity() * 2);
     }
     queue.emplace_back(filename);
 
-    if (addCallback != nullptr) {
+    if (addCallback != nullptr)
+    {
         const std::string name = filename;
         const size_t trackName = name.find_last_of("/\\") + 1;
         const size_t fileExtension = name.rfind('.');
@@ -83,21 +101,26 @@ void PlaybackQueue::Enqueue(const char *filename) {
     }
 }
 
-void PlaybackQueue::Remove(const int index) {
-    if (index == currentIndex && currentTrack != nullptr) {
+void PlaybackQueue::Remove(const int index)
+{
+    if (index == currentIndex && currentTrack != nullptr)
+    {
         currentTrack->Pause();
         delete currentTrack;
         currentTrack = nullptr;
     }
 
-    if (index < queue.size()) {
+    if (index < queue.size())
+    {
         queue.erase(queue.begin() + index);
         currentIndex = index - 1;
     }
 }
 
-void PlaybackQueue::Clear() {
-    if (currentTrack != nullptr) {
+void PlaybackQueue::Clear()
+{
+    if (currentTrack != nullptr)
+    {
         delete currentTrack;
         currentTrack = nullptr;
     }
@@ -107,29 +130,38 @@ void PlaybackQueue::Clear() {
     currentIndex = -1;
 }
 
-int PlaybackQueue::Repeat() const {
+int PlaybackQueue::Repeat() const
+{
     return repeat;
 }
 
-void PlaybackQueue::Repeat(const bool toggle) {
-    if (toggle) {
+void PlaybackQueue::Repeat(const bool toggle)
+{
+    if (toggle)
+    {
         repeat = -2;
-    } else {
+    }
+    else
+    {
         repeat = -1;
     }
 }
 
-void PlaybackQueue::Repeat(const unsigned int index) {
-    if (index < queue.size()) {
+void PlaybackQueue::Repeat(const unsigned int index)
+{
+    if (index < queue.size())
+    {
         repeat = static_cast<int>(index);
     }
 }
 
-int PlaybackQueue::GetQueueLength() const {
+int PlaybackQueue::GetQueueLength() const
+{
     return static_cast<int>(queue.size());
 }
 
-void PlaybackQueue::SetQueueAddCallback(SDL_Renderer *renderer, Frame *frame, void (*callback)(SDL_Renderer *, Frame *, const char *, int)) {
+void PlaybackQueue::SetQueueAddCallback(SDL_Renderer *renderer, Frame *frame, void (*callback)(SDL_Renderer *, Frame *, const char *, int))
+{
     addCallback = callback;
     rend = renderer;
     f = frame;

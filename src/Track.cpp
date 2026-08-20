@@ -19,30 +19,36 @@ AVSampleFormat Planar_to_Packed(AVSampleFormat fmt);
 SDL_AudioFormat FFmpeg_to_SDL_Audio_Format(AVSampleFormat fmt);
 void GetDataCallback(void *userdata, SDL_AudioStream *stream, int additional_amount, int total_amount);
 
-Track::Track(const char *filename) {
+Track::Track(const char *filename)
+{
     progressed_bytes = 0;
     paused = true;
 
-    if (avformat_open_input(&format_context, filename, nullptr, nullptr) < 0) {
+    if (avformat_open_input(&format_context, filename, nullptr, nullptr) < 0)
+    {
         std::cerr << "failed to open file " << filename << "\n";
         return;
     }
 
-    if (avformat_find_stream_info(format_context, nullptr) < 0) {
+    if (avformat_find_stream_info(format_context, nullptr) < 0)
+    {
         std::cerr << "failed to find stream information\n";
         return;
     }
 
     streamIndex = -1;
 
-    for (unsigned int i = 0; i < format_context->nb_streams; ++i) {
-        if (format_context->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+    for (unsigned int i = 0; i < format_context->nb_streams; ++i)
+    {
+        if (format_context->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO)
+        {
             streamIndex = static_cast<int>(i);
             break;
         }
     }
 
-    if (streamIndex == -1) {
+    if (streamIndex == -1)
+    {
         std::cerr << "no audio stream found\n";
         return;
     }
@@ -55,7 +61,8 @@ Track::Track(const char *filename) {
 
     avcodec_parameters_to_context(codec_context, params);
 
-    if (avcodec_open2(codec_context, codec, nullptr) < 0) {
+    if (avcodec_open2(codec_context, codec, nullptr) < 0)
+    {
         std::cerr << "Could not open codec\n";
         return;
     }
@@ -69,7 +76,8 @@ Track::Track(const char *filename) {
         &spec
     );
 
-    if (!device) {
+    if (!device)
+    {
         std::cout << SDL_GetError() << "\n";
         return;
     }
@@ -79,7 +87,8 @@ Track::Track(const char *filename) {
         &spec
     );
 
-    if (!stream) {
+    if (!stream)
+    {
         std::cerr << "SDL_CreateAudioStream failed: " << SDL_GetError() << "\n";
         return;
     }
@@ -92,12 +101,14 @@ Track::Track(const char *filename) {
 
     SDL_SetAudioStreamGetCallback(stream, GetDataCallback, &track_pos_seconds);
 
-    if (!LoadCoverArt()) {
+    if (!LoadCoverArt())
+    {
         std::cout << "Cover art not found for " << filename << "\n";
     }
 }
 
-Track::~Track() {
+Track::~Track()
+{
     SDL_DestroySurface(coverArt);
 
     SDL_UnbindAudioStream(stream);
@@ -116,12 +127,14 @@ Track::~Track() {
     SDL_PushEvent(&event);
 }
 
-void Track::Pause() {
+void Track::Pause()
+{
     paused = true;
     SDL_PauseAudioDevice(device);
 }
 
-void Track::Play() {
+void Track::Play()
+{
     paused = false;
     SDL_ResumeAudioDevice(device);
     SDL_Event event;
@@ -130,19 +143,23 @@ void Track::Play() {
     SDL_PushEvent(&event);
 }
 
-void Track::Restart() {
+void Track::Restart()
+{
     Seek(0);
     track_pos_seconds = 0;
     progressed_bytes = 0;
 }
 
-void Track::Jump(int seconds) {
-    if (track_pos_seconds + seconds <= 0) {
+void Track::Jump(int seconds)
+{
+    if (track_pos_seconds + seconds <= 0)
+    {
         Restart();
         return;
     }
 
-    if (track_pos_seconds + seconds > dur_seconds) {
+    if (track_pos_seconds + seconds > dur_seconds)
+    {
         seconds = dur_seconds - track_pos_seconds;
     }
 
@@ -151,43 +168,51 @@ void Track::Jump(int seconds) {
     progressed_bytes += static_cast<int>(seconds * (spec.freq * SDL_AUDIO_BYTESIZE(spec.format) * spec.channels));
 }
 
-void Track::Seek(const long long timestamp) const {
+void Track::Seek(const long long timestamp) const
+{
     av_seek_frame(format_context, -1, timestamp * AV_TIME_BASE, AVSEEK_FLAG_BACKWARD);
     SDL_ClearAudioStream(stream);
     FFmpeg_to_SDL(); // NOLINT
 }
 
-int Track::GetRawTrackLength() const {
+int Track::GetRawTrackLength() const
+{
     return dur_seconds;
 }
 
-const char *Track::GetTrackLength() const {
+const char *Track::GetTrackLength() const
+{
     const int min = dur_seconds / 60;
     const int sec = dur_seconds - (min * 60);
 
-    if (sec < 10) {
+    if (sec < 10)
+    {
         return (std::to_string(min) + ":0" + std::to_string(sec)).c_str();
     }
 
     return (std::to_string(min) + ":" + std::to_string(sec)).c_str();
 }
 
-int Track::GetRawPlaybackPosition() const {
+int Track::GetRawPlaybackPosition() const
+{
     return track_pos_seconds;
 }
 
-const char *Track::GetPlaybackPosition() const {
+const char *Track::GetPlaybackPosition() const
+{
     const int min = track_pos_seconds / 60;
     const int sec = track_pos_seconds - (min * 60);
 
-    if (sec < 10) {
+    if (sec < 10)
+    {
         return (std::to_string(min) + ":0" + std::to_string(sec)).c_str();
     }
 
     return (std::to_string(min) + ":" + std::to_string(sec)).c_str();
 }
 
-int Track::FFmpeg_to_SDL() const {
+int Track::FFmpeg_to_SDL() const
+{
     SwrContext *swr = nullptr;
 
     const AVSampleFormat packed_format = Planar_to_Packed(codec_context->sample_fmt);
@@ -213,18 +238,22 @@ int Track::FFmpeg_to_SDL() const {
     AVPacket *pkt = av_packet_alloc();
     AVFrame *frame = av_frame_alloc();
 
-    while (av_read_frame(format_context, pkt) >= 0) {
-        if (pkt->stream_index != streamIndex) {
+    while (av_read_frame(format_context, pkt) >= 0)
+    {
+        if (pkt->stream_index != streamIndex)
+        {
             av_packet_unref(pkt);
             continue;
         }
 
-        if (avcodec_send_packet(codec_context, pkt) < 0) {
+        if (avcodec_send_packet(codec_context, pkt) < 0)
+        {
             av_packet_unref(pkt);
             continue;
         }
 
-        while (avcodec_receive_frame(codec_context, frame) == 0) {
+        while (avcodec_receive_frame(codec_context, frame) == 0)
+        {
             const int64_t outSamples = av_rescale_rnd(
                 swr_get_delay(swr, codec_context->sample_rate) + frame->nb_samples,
                 codec_context->sample_rate,
@@ -261,7 +290,8 @@ int Track::FFmpeg_to_SDL() const {
 
             total_bytes += bytes;
 
-            if (!SDL_PutAudioStreamData(stream, outBuffer, bytes)) {
+            if (!SDL_PutAudioStreamData(stream, outBuffer, bytes))
+            {
                 std::cerr << "SDL_PutAudioStreamData failed: " << SDL_GetError() << "\n";
             }
             av_freep(&outBuffer);
@@ -281,56 +311,70 @@ int Track::FFmpeg_to_SDL() const {
     return static_cast<int>(total_bytes / (spec.freq * SDL_AUDIO_BYTESIZE(spec.format) * spec.channels));
 }
 
-bool Track::IsPaused() const {
+bool Track::IsPaused() const
+{
     return paused;
 }
 
-bool Track::TrackEnded() const {
+bool Track::TrackEnded() const
+{
     return track_pos_seconds >= dur_seconds;
 }
 
-const char *Track::Artist() const {
+const char *Track::Artist() const
+{
     const AVDictionaryEntry *entry = av_dict_get(format_context->metadata, "artist", nullptr, 0);
-    if (entry == nullptr) {
+    if (entry == nullptr)
+    {
         return "";
     }
     return entry->value;
 }
 
-const char *Track::Title() const {
+const char *Track::Title() const
+{
     const AVDictionaryEntry *entry = av_dict_get(format_context->metadata, "title", nullptr, 0);
-    if (entry == nullptr) {
+    if (entry == nullptr)
+    {
         return "";
     }
     return entry->value;
 }
 
-const char *Track::Album() const {
+const char *Track::Album() const
+{
     const AVDictionaryEntry *entry = av_dict_get(format_context->metadata, "album", nullptr, 0);
-    if (entry == nullptr) {
+    if (entry == nullptr)
+    {
         return "";
     }
     return entry->value;
 }
 
-const char *Track::AlbumArtist() const { // TODO This should get moved into an album handler
+const char *Track::AlbumArtist() const // TODO This should get moved into an album handler
+{
     const AVDictionaryEntry *entry = av_dict_get(format_context->metadata, "album_artist", nullptr, 0);
-    if (entry == nullptr) {
+    if (entry == nullptr)
+    {
         return "";
     }
     return entry->value;
 }
 
-const char *Track::Genre() const {
+const char *Track::Genre() const
+{
     const AVDictionaryEntry *entry = av_dict_get(format_context->metadata, "genre", nullptr, 0);
-    if (entry == nullptr) {
+    if (entry == nullptr)
+    {
         return "";
     }
     return entry->value;
 }
 
-AVSampleFormat Planar_to_Packed(const AVSampleFormat fmt) {
-    switch (fmt) {
+AVSampleFormat Planar_to_Packed(const AVSampleFormat fmt)
+{
+    switch (fmt)
+    {
         case AV_SAMPLE_FMT_U8:
         case AV_SAMPLE_FMT_U8P:
             return AV_SAMPLE_FMT_U8;
@@ -363,8 +407,10 @@ AVSampleFormat Planar_to_Packed(const AVSampleFormat fmt) {
     }
 }
 
-SDL_AudioFormat FFmpeg_to_SDL_Audio_Format(const AVSampleFormat fmt) {
-    switch (fmt) {
+SDL_AudioFormat FFmpeg_to_SDL_Audio_Format(const AVSampleFormat fmt)
+{
+    switch (fmt)
+    {
         case AV_SAMPLE_FMT_U8:
         case AV_SAMPLE_FMT_U8P:
             return SDL_AUDIO_U8;
@@ -394,7 +440,8 @@ SDL_AudioFormat FFmpeg_to_SDL_Audio_Format(const AVSampleFormat fmt) {
     }
 }
 
-void GetDataCallback(void *userdata, SDL_AudioStream *stream, int additional_amount, const int total_amount) {
+void GetDataCallback(void *userdata, SDL_AudioStream *stream, int additional_amount, const int total_amount)
+{
     progressed_bytes += total_amount;
 
     auto *output = static_cast<int *>(userdata);
@@ -402,18 +449,23 @@ void GetDataCallback(void *userdata, SDL_AudioStream *stream, int additional_amo
     *output = static_cast<int>(progressed_bytes / (spec_ref->freq * spec_ref->channels * SDL_AUDIO_BYTESIZE(spec_ref->format)));
 }
 
-SDL_Surface *Track::CoverArt() const {
+SDL_Surface *Track::CoverArt() const
+{
     return coverArt;
 }
 
-bool Track::LoadCoverArt() {
-    if (coverArt != nullptr) {
+bool Track::LoadCoverArt()
+{
+    if (coverArt != nullptr)
+    {
         return true;
     }
 
     bool foundArt = false;
-    for (unsigned int i = 0; i < format_context->nb_streams; ++i) {
-        if (const AVStream *s = format_context->streams[i]; s->disposition & AV_DISPOSITION_ATTACHED_PIC) {
+    for (unsigned int i = 0; i < format_context->nb_streams; ++i)
+    {
+        if (const AVStream *s = format_context->streams[i]; s->disposition & AV_DISPOSITION_ATTACHED_PIC)
+        {
             const AVPacket pic = s->attached_pic;
 
             coverArt = IMG_Load_IO(SDL_IOFromConstMem(
