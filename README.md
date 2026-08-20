@@ -1,15 +1,84 @@
 # MePlayer
 A lightweight music player
 
-## Current version: 0.4.2_DEV
-This branch is to follow the development and implementation of a proper asset parent system
+## Current version: 0.4.2
+- [x] Version 1 ***(Tech demo)***
+  - [x] SDL window
+  - [x] play single song
+- [x] Version 2 ***(Simple, hardcoded library)***
+  - [x] FFmpeg decoding pipeline
+  - [x] proper audio buffering
+- [x] Version 3 ***(Display current song info)***
+  - [x] metadata extraction
+- [ ] Version 4 ***(Library and UI Iteration 1)***
+  - [x] library scanning (0.4.1)
+  - [ ] proper usage loop (0.4.2)
+    - [x] open window with no audio
+    - [x] scan library
+      - [ ] iterate through every folder in a scan list (0.4.3)
+    - [x] display library by track name
+    - [x] build queue by clicking tracks
+    - [ ] access queue
+      - [x] see queue contents
+      - [x] remove queue contents
+      - [ ] rearrange queue contents (0.4.3)
+        - May get delayed until after parents are implemented
+    - [x] play tracks
+    - [ ] playback controls
+      - [x] skip tracks
+      - [x] pause tracks
+      - [x] restart tracks
+      - [x] previous track
+      - [ ] jump to time (0.4.3)
+    - [x] jump to tracks
+    - [x] do not crash when queue ends
+      - overall: do not crash when no audio is playing
+- [ ] Version 5 ***(Sort by album)***
+  - [ ] album grouping
+- [ ] Version 6 ***(UI Iteration 2)***
+  - [ ] proper graphics architecture
+    - [ ] application state machine
+  - [ ] UI polish
+- [ ] Version 7 ***(Sort by custom playlist)***
+  - [ ] playlists
+- [ ] Version 8 ***(Social integration)***
+  - [ ] Discord RPC
+  - [ ] Last.FM
+- [ ] Release Version ***(UI Iteration 3 and full-build features)***
+  - [ ] UI tweaks
+  - [ ] Bug fixes
+  - [ ] Implement any minor forgotten features
+    - (If the features were not minor, they would be listed already/not forgotten)
 
-Namely:
-- [x] Frames need to be able to parent buttons
-- [x] Frames need to be able to parent frames
-- [x] Buttons need to be able to parent buttons
-- [x] Children need to be able to reference their parents
-- [x] Parents need to be able to reference their children
-- [x] Upon update (resize, move, etc.) of a parent, the child needs to react
-- [ ] Upon removal of a child, a parent needs to know
-- [x] Upon removal of a parent, a child needs to be removed
+## Assets needed:
+- [x] Track
+  - Added: 0.1.0
+  - Last updated: 0.4.2
+- [x] Playback Queue
+  - Added: 0.2.0
+  - Last updated: 0.4.2
+- [x] Library
+  - Added: 0.4.0
+  - Last updated: 0.4.2
+- [x] Library Handler
+  - Added: 0.4.1
+  - Last updated: 0.4.2
+- [x] Button
+  - Added: 0.4.1
+  - Last updated: 0.4.2
+- [x] Text Button
+  - Added: 0.4.1
+  - Last updated: 0.4.2
+- [x] Frame
+  - Added: 0.4.2
+  - Last updated: 0.4.2
+- [x] Scrolling Frame
+  - Added: 0.4.2
+  - Last updated: 0.4.2
+- [x] Events
+  - Added: 0.4.2
+  - Last updated: 0.4.2
+- [ ] Album
+  - Planned for: 0.5.0
+- [ ] Image Button
+  - Planned for: 0.6.0
