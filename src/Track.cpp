@@ -390,6 +390,7 @@ AVSampleFormat Planar_to_Packed(const AVSampleFormat fmt)
         case AV_SAMPLE_FMT_FLT:
         case AV_SAMPLE_FMT_FLTP:
             return AV_SAMPLE_FMT_FLT;
+
         case AV_SAMPLE_FMT_DBL:
         case AV_SAMPLE_FMT_DBLP:
             return AV_SAMPLE_FMT_DBL;
@@ -398,10 +399,10 @@ AVSampleFormat Planar_to_Packed(const AVSampleFormat fmt)
         case AV_SAMPLE_FMT_S64P:
             return AV_SAMPLE_FMT_S64;
 
-        case AV_SAMPLE_FMT_NONE:
-            return AV_SAMPLE_FMT_NONE;
         case AV_SAMPLE_FMT_NB:
             return AV_SAMPLE_FMT_NB;
+
+        case AV_SAMPLE_FMT_NONE:
         default:
             return AV_SAMPLE_FMT_NONE;
     }
