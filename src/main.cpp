@@ -126,7 +126,7 @@ int main(int argc, char* argv[])
     timeBack->SetButtonColor(0, 0, 0, 255);
     timeBack->SetButtonHoverColor(0, 0, 0, 255);
 
-    auto *timeProg = new Button(timeBack, {0, 0}, {0, 0}, {0.5, 0}, {1, 0}, 0);
+    auto *timeProg = new Button(timeBack, {0, 0}, {0, 0}, {0, 0}, {1, 0}, 0);
     timeProg->SetBorderColor(0, 0, 0, 0);
     timeProg->SetBorderHoverColor(0, 0, 0, 0);
     timeProg->SetButtonColor(255, 255, 255, 255);

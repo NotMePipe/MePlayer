@@ -52,6 +52,7 @@ A lightweight music player
 - [ ] Release Version ***(UI Iteration 3 and full-build features)***
   - [ ] UI tweaks
   - [ ] Bug fixes
+  - [ ] Restore prior session
   - [ ] Implement any minor forgotten features
     - (If the features were not minor, they would be listed already/not forgotten)
 
