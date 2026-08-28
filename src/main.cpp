@@ -80,14 +80,23 @@ int main(int argc, char* argv[])
     topBar->SetButtonColor(255, 255, 255, 255);
 
     auto *songSelect = new ScrollingFrame(mainScreen, {0, 0}, {0.056, 0}, {0.781, 0}, {0.807, 0});
-    for (const auto &[path, name] : library_handler->GetAllInfo())
     {
-        // TODO Find better height than 50
-        // TODO I would like to find a better solution than only using offsets
-        const float width = songSelect->GetRect().w / 3;
-        auto *b = new TextButton(songSelect, {0, width * static_cast<float>(songSelect->NumChildren() % 3)}, {0, static_cast<float>(50  * static_cast<int>(songSelect->NumChildren() / 3))}, {0, width}, {0.1f, 0}, 5.0f, "Roboto.ttf", 50.0f);
-        b->SetText(renderer, name.c_str());
-        b->SetOnClickEvent(AddToQueue, nullptr); // TODO Determine if nullptr
+        int count = 0;
+        for (const auto &[path, name] : library_handler->GetAllInfo())
+        {
+            // TODO Make the linter not as angry at me, but this is currently mostly testing code
+            float padding = 0.01;
+            float height = 0.1;
+            int buttonsPerRow = 3;
+
+            int col = count % buttonsPerRow;
+            int row = floor((count++) / buttonsPerRow);
+
+            auto *b = new TextButton(songSelect, {col * (1.0f / buttonsPerRow) + (padding / 2), 0}, {row * (height + padding), 0}, {(1.0f / buttonsPerRow) - padding, 0}, {height, 0}, 5.0f, "Roboto.ttf", 50.0f);
+
+            b->SetText(renderer, name.c_str());
+            b->SetOnClickEvent(AddToQueue, nullptr); // TODO Determine if nullptr
+        }
     }
 
     auto *queueFrame = new ScrollingFrame(mainScreen, {0.781, 0}, {0.056, 0}, {0.219, 0}, {0.807, 0});
@@ -244,8 +253,7 @@ void ScanLibrary(LibraryHandler **lib, const char *path)
 
 void AddQueueButton(SDL_Renderer *renderer, Frame *frame, const char *trackName, const int index)
 {
-    // TODO I would like to find a better solution than only using offsets
-    auto *b = new TextButton(frame, {0, 0}, {0, static_cast<float>(50 * frame->NumChildren())}, {1, 0}, {0, 50}, 5, "Roboto.ttf", 50);
+    auto *b = new TextButton(frame, {0, 0}, {static_cast<float>(frame->NumChildren()) * 0.11f}, {1, 0}, {0.1f, 0}, 5, "Roboto.ttf", 50);
     b->SetText(renderer, trackName);
     b->AssignIndex(index);
     b->SetOnClickEvent(PlayInQueue, nullptr);  // TODO Determine if nullptr
