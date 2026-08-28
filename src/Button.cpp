@@ -117,6 +117,16 @@ void Button::Hover(const float x, const float y)
     }
 }
 
+void Button::OnClick(float x, float y) {
+    if (IsInBounds(x, y))
+    {
+        if (clickEvent != nullptr)
+        {
+            clickEvent(data);
+        }
+    }
+}
+
 SDL_FRect Button::GetBorder() const
 {
     return GetRect();

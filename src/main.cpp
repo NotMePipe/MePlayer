@@ -15,6 +15,7 @@ void AddQueueButton(SDL_Renderer *renderer, Frame *frame, const char *trackName,
 void AddToQueue(void *info);
 void PlayInQueue(void *info);
 void RemoveFromQueue(void *info);
+void Seek(void *info);
 // TODO These need overhauled
 void PlayPause(void *info);
 void RR(void *info);
@@ -106,18 +107,33 @@ int main(int argc, char* argv[])
     playbackControls->SetColor(255, 0, 0, 255);
     // TODO These should all become image buttons
     {
-        auto *playPause = new TextButton(playbackControls, {0.289, 0}, {0.16, 0}, {0.2, 0}, {0.667, 0}, 5, "Roboto.ttf", 50);
+        auto *playPause = new TextButton(playbackControls, {0.289, 0}, {0.53, 0}, {0.2, 0}, {0.3, 0}, 5, "Roboto.ttf", 50);
         playPause->SetText(renderer, "Play/Pause");
         playPause->SetOnClickEvent(PlayPause, nullptr); // TODO Determine if nullptr
 
-        auto *rr = new TextButton(playbackControls, {0.064, 0}, {0.16, 0}, {0.2, 0}, {0.667, 0}, 5, "Roboto.ttf", 50);
+        auto *rr = new TextButton(playbackControls, {0.064, 0}, {0.53, 0}, {0.2, 0}, {0.3, 0}, 5, "Roboto.ttf", 50);
         rr->SetText(renderer, "RR");
         rr->SetOnClickEvent(RR, nullptr); // TODO Determine if nullptr
 
-        auto *ff = new TextButton(playbackControls, {0.515, 0}, {0.16, 0}, {0.2, 0}, {0.667, 0}, 5, "Roboto.ttf", 50);
+        auto *ff = new TextButton(playbackControls, {0.515, 0}, {0.53, 0}, {0.2, 0}, {0.3, 0}, 5, "Roboto.ttf", 50);
         ff->SetText(renderer, "FF");
         ff->SetOnClickEvent(FF, nullptr);  // TODO Determine if nullptr
     }
+
+    auto *timeBack = new Button(playbackControls, {0.063, 0}, {0.1, 0}, {0.652, 0}, {0.3, 0}, 0);
+    timeBack->SetBorderColor(0, 0, 0, 0);
+    timeBack->SetBorderHoverColor(0, 0, 0, 0);
+    timeBack->SetButtonColor(0, 0, 0, 255);
+    timeBack->SetButtonHoverColor(0, 0, 0, 255);
+
+    auto *timeProg = new Button(timeBack, {0, 0}, {0, 0}, {0.5, 0}, {1, 0}, 0);
+    timeProg->SetBorderColor(0, 0, 0, 0);
+    timeProg->SetBorderHoverColor(0, 0, 0, 0);
+    timeProg->SetButtonColor(255, 255, 255, 255);
+    timeProg->SetButtonHoverColor(255, 255, 255, 255);
+
+    float mousePercent = 0;
+    timeBack->SetOnClickEvent(Seek, &mousePercent);
 
     playback = nullptr;
     bool quit = false;
@@ -143,6 +159,9 @@ int main(int argc, char* argv[])
                     songSelect->Scroll(event.wheel.mouse_x, event.wheel.mouse_y, event.wheel.y * SCROLL_SCALE);
                     queueFrame->Scroll(event.wheel.mouse_x, event.wheel.mouse_y, event.wheel.y * SCROLL_SCALE);
                     break;
+                case SDL_EVENT_MOUSE_MOTION:
+                    mousePercent = (event.motion.x - timeBack->GetBorder().x) / ((timeBack->GetBorder().x + timeBack->GetBorder().w) - timeBack->GetBorder().x);
+                    break;
                 default:
                     if (event.type == TRACK_PLAY_EVENT)
                     {
@@ -155,9 +174,7 @@ int main(int argc, char* argv[])
                     }
                     else
                     {
-                        songSelect->HandleEvent(event);
-                        queueFrame->HandleEvent(event);
-                        playbackControls->HandleEvent(event);
+                        mainScreen->HandleEvent(event);
                     }
             }
         }
@@ -167,8 +184,12 @@ int main(int argc, char* argv[])
             if (playback->TrackEnded() || skip)
             {
                 skip = false;
-                playback_queue->Next(&playback);
+                if (playback_queue->Next(&playback) < 0)
+                {
+                    playback->Pause();
+                }
             }
+            timeProg->Resize({static_cast<float>(playback->GetRawPlaybackPosition()) / static_cast<float>(playback->GetRawTrackLength())}, {1, 0});
         }
         else
         {
@@ -258,7 +279,7 @@ void AddQueueButton(SDL_Renderer *renderer, Frame *frame, const char *trackName,
     b->AssignIndex(index);
     b->SetOnClickEvent(PlayInQueue, nullptr);  // TODO Determine if nullptr
 
-    // TODO I would like to find a better solution for this in most areas
+    // TODO I would like to find a better solution for this in all areas
     auto *x = new TextButton(b, {1, -50}, {0, 0}, {0, 50}, {0, 50}, 5, "Roboto.ttf", 50);
     // TODO Figure out render order when text is involved
     x->SetText(renderer, "X");
@@ -280,8 +301,17 @@ void PlayInQueue(void *info)
     PlaybackQueue::GetPlaybackQueue()->Play(&playback, static_cast<TextButtonInfo *>(info)->index);
 }
 
+void Seek(void *info)
+{
+    if (playback != nullptr)
+    {
+        // TODO My linter is upset about this, but I am tempted to go through and remove most of the static_casts and make it suck it up
+        playback->Seek(playback->GetRawTrackLength() * *static_cast<float *>(info));
+    }
+}
+
 // TODO I need to implement a way to intelligently move the rest of the queue to the top when an item is removed
-void RemoveFromQueue(void *info)
+void RemoveFromQueue(void *info) // TODO This randomly started crashing again, but this whole system needs fixed
 {
     const int index = static_cast<TextButtonInfo *>(info)->index;
     auto *frame = static_cast<Frame *>(static_cast<TextButtonInfo *>(info)->userdata);

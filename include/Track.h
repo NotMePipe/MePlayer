@@ -19,7 +19,7 @@ public:
     void Restart();
 
     void Jump(int seconds);
-    void Seek(long long timestamp) const;
+    void Seek(long long timestamp);
 
     [[nodiscard]] int GetRawTrackLength() const;
     [[nodiscard]] const char *GetTrackLength() const;

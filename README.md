@@ -18,18 +18,16 @@ A lightweight music player
       - [ ] iterate through every folder in a scan list (0.4.3)
     - [x] display library by track name
     - [x] build queue by clicking tracks
-    - [ ] access queue
+    - [x] access queue
       - [x] see queue contents
       - [x] remove queue contents
-      - [ ] rearrange queue contents (0.4.3)
-        - May get delayed until after parents are implemented
     - [x] play tracks
-    - [ ] playback controls
+    - [x] playback controls
       - [x] skip tracks
       - [x] pause tracks
       - [x] restart tracks
       - [x] previous track
-      - [ ] jump to time (0.4.3)
+      - [x] jump to time (0.4.3)
     - [x] jump to tracks
     - [x] do not crash when queue ends
       - overall: do not crash when no audio is playing
@@ -38,7 +36,14 @@ A lightweight music player
 - [ ] Version 6 ***(UI Iteration 2)***
   - [ ] proper graphics architecture
     - [ ] application state machine
+      - [ ] different windows
   - [ ] UI polish
+  - [ ] playback controls improvements
+    - [ ] display timestamp
+    - [ ] skip/reverse 10 seconds
+    - [ ] volume settings
+  - [ ] settings menu
+  - [ ] implement queue rearrangement
 - [ ] Version 7 ***(Sort by custom playlist)***
   - [ ] playlists
 - [ ] Version 8 ***(Social integration)***
@@ -53,7 +58,7 @@ A lightweight music player
 ## Assets needed:
 - [x] Track
   - Added: 0.1.0
-  - Last updated: 0.4.2
+  - Last updated: 0.4.3
 - [x] Playback Queue
   - Added: 0.2.0
   - Last updated: 0.4.2
@@ -65,7 +70,7 @@ A lightweight music player
   - Last updated: 0.4.2
 - [x] Button
   - Added: 0.4.1
-  - Last updated: 0.4.2
+  - Last updated: 0.4.3
 - [x] Text Button
   - Added: 0.4.1
   - Last updated: 0.4.2
@@ -75,9 +80,9 @@ A lightweight music player
 - [x] Scrolling Frame
   - Added: 0.4.2
   - Last updated: 0.4.2
-- [x] Events
+- [x] Utils
   - Added: 0.4.2
-  - Last updated: 0.4.2
+  - Last updated: 0.4.3
 - [ ] Album
   - Planned for: 0.5.0
 - [ ] Image Button

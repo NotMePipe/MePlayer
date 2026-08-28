@@ -164,15 +164,18 @@ void Track::Jump(int seconds)
     }
 
     Seek(track_pos_seconds + seconds);
-    track_pos_seconds += seconds;
-    progressed_bytes += static_cast<int>(seconds * (spec.freq * SDL_AUDIO_BYTESIZE(spec.format) * spec.channels));
+    // TODO Remove when confirmed is working properly
+    /*track_pos_seconds += seconds;
+    progressed_bytes += static_cast<int>(seconds * (spec.freq * SDL_AUDIO_BYTESIZE(spec.format) * spec.channels));*/
 }
 
-void Track::Seek(const long long timestamp) const
-{
+void Track::Seek(const long long timestamp) {
     av_seek_frame(format_context, -1, timestamp * AV_TIME_BASE, AVSEEK_FLAG_BACKWARD);
     SDL_ClearAudioStream(stream);
     FFmpeg_to_SDL(); // NOLINT
+    // This feels so incredibly unsafe
+    track_pos_seconds = static_cast<int>(timestamp);
+    progressed_bytes = static_cast<int>(timestamp * (spec.freq * SDL_AUDIO_BYTESIZE(spec.format) * spec.channels));
 }
 
 int Track::GetRawTrackLength() const
