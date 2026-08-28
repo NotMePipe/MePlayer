@@ -51,10 +51,10 @@ A lightweight music player
   - [ ] Last.FM
 - [ ] Release Version ***(UI Iteration 3 and full-build features)***
   - [ ] UI tweaks
-  - [ ] Bug fixes
-  - [ ] Restore prior session
-  - [ ] Implement any minor forgotten features
-    - (If the features were not minor, they would be listed already/not forgotten)
+  - [ ] bug fixes
+  - [ ] restore prior session
+  - [ ] implement any minor forgotten features
+    - (if the features were not minor, they would be listed already/not forgotten)
 
 ## Assets needed:
 - [x] Track
