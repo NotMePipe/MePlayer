@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 4.2)
-project(MePlayer VERSION 0.5.0)
+project(MePlayer VERSION 0.4.3)
 
 set(CMAKE_CXX_STANDARD 17)
 

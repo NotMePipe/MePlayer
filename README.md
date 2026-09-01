@@ -1,7 +1,7 @@
 # MePlayer
 A lightweight music player
 
-## Current version: 0.4.3
+## Current version: 0.4.2
 - [x] Version 1 ***(Tech demo)***
   - [x] SDL window
   - [x] play single song
@@ -15,6 +15,7 @@ A lightweight music player
   - [ ] proper usage loop (0.4.2)
     - [x] open window with no audio
     - [x] scan library
+      - [ ] iterate through every folder in a scan list (0.4.3)
     - [x] display library by track name
     - [x] build queue by clicking tracks
     - [x] access queue
@@ -33,7 +34,7 @@ A lightweight music player
 - [ ] Version 5 ***(Sort by album and library overhaul)***
   - [ ] album grouping
   - [ ] library overhaul
-    - [ ] iterate through every folder in a scan list
+    - [ ] properly store library
     - [ ] investigate duplicate name bug
     - [ ] find better solution to queue adding
 - [ ] Version 6 ***(UI Iteration 2)***
