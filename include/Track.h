@@ -36,6 +36,8 @@ public:
     [[nodiscard]] const char *AlbumArtist() const;
     [[nodiscard]] const char *Genre() const;
 
+    [[nodiscard]] const char *GetMetadata(const char *key) const;
+
     [[nodiscard]] SDL_Surface *CoverArt() const;
 private:
     int streamIndex = -1;

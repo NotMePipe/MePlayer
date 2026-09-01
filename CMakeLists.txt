@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 4.2)
-project(MePlayer VERSION 0.4.3)
+project(MePlayer VERSION 0.5.0)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -21,6 +21,8 @@ add_executable(${PROJECT_NAME}
         include/Frame.h
         include/ScrollingFrame.h
         include/Utils.h
+        src/Album.cpp
+        include/Album.h
 )
 
 # I feel like this probably isn't a great practice

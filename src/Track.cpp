@@ -344,6 +344,7 @@ const char *Track::Title() const
     return entry->value;
 }
 
+// TODO This block should be moved into the album handler or modified to work in conjunction with the album handler
 const char *Track::Album() const
 {
     const AVDictionaryEntry *entry = av_dict_get(format_context->metadata, "album", nullptr, 0);
@@ -354,7 +355,7 @@ const char *Track::Album() const
     return entry->value;
 }
 
-const char *Track::AlbumArtist() const // TODO This should get moved into an album handler
+const char *Track::AlbumArtist() const
 {
     const AVDictionaryEntry *entry = av_dict_get(format_context->metadata, "album_artist", nullptr, 0);
     if (entry == nullptr)
@@ -363,6 +364,17 @@ const char *Track::AlbumArtist() const // TODO This should get moved into an alb
     }
     return entry->value;
 }
+
+const char *Track::GetMetadata(const char *key) const
+{
+    const AVDictionaryEntry *entry = av_dict_get(format_context->metadata, key, nullptr, 0);
+    if (entry == nullptr)
+    {
+        return "";
+    }
+    return entry->value;
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const char *Track::Genre() const
 {
