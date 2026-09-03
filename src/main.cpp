@@ -10,7 +10,6 @@
 #include "TextButton.h"
 #include "Utils.h"
 
-void ScanLibrary(LibraryHandler **lib, const char *path);
 void AddQueueButton(SDL_Renderer *renderer, Frame *frame, const char *trackName, int index);
 void AddToQueue(void *info);
 void PlayInQueue(void *info);
@@ -72,8 +71,7 @@ int main(int argc, char* argv[])
     auto *playback_queue = PlaybackQueue::GetPlaybackQueue();
 
     auto *library_handler = LibraryHandler::GetLibraryHandler();
-    ScanLibrary(&library_handler, "Music Folder");
-    library_handler->GenerateInfo();
+    library_handler->ScanLibrary();
 
     auto *mainScreen = new Frame(window, {0, 0}, {0, 0}, {1, 0}, {1, 0});
 
@@ -81,9 +79,13 @@ int main(int argc, char* argv[])
     topBar->SetButtonColor(255, 255, 255, 255);
 
     auto *songSelect = new ScrollingFrame(mainScreen, {0, 0}, {0.056, 0}, {0.781, 0}, {0.807, 0});
+
+    // TODO I believe this section should be put in a function so that it can run upon refresh
+    std::vector<int> counters;
+    counters.reserve(library_handler->GetContext()->titles.size());
     {
         int count = 0;
-        for (const auto &[path, name] : library_handler->GetAllInfo())
+        for (const auto &title : library_handler->GetContext()->titles)
         {
             // TODO Make the linter not as angry at me, but this is currently mostly testing code
             float padding = 0.01;
@@ -91,12 +93,14 @@ int main(int argc, char* argv[])
             int buttonsPerRow = 3;
 
             int col = count % buttonsPerRow;
-            int row = floor((count++) / buttonsPerRow);
+            int row = floor(count / buttonsPerRow);
+
+            counters.push_back(count);
 
             auto *b = new TextButton(songSelect, {col * (1.0f / buttonsPerRow) + (padding / 2), 0}, {row * (height + padding), 0}, {(1.0f / buttonsPerRow) - padding, 0}, {height, 0}, 5.0f, "Roboto.ttf", 50.0f);
 
-            b->SetText(renderer, name.c_str());
-            b->SetOnClickEvent(AddToQueue, nullptr); // TODO Determine if nullptr
+            b->SetText(renderer, title.c_str());
+            b->SetOnClickEvent(AddToQueue, &counters[count++]);
         }
     }
 
@@ -232,46 +236,6 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-void ScanLibrary(LibraryHandler **lib, const char *path)
-{
-    SDL_PathInfo info;
-
-    if (!SDL_GetPathInfo(path, &info))
-    {
-        std::cerr << "Error in GetPathInfo: " << SDL_GetError() << " : " << path << "\n";
-        return;
-    }
-
-    if (info.type == SDL_PATHTYPE_FILE)
-    {
-        (*lib)->Insert(path);
-        return;
-    }
-
-    if (info.type == SDL_PATHTYPE_DIRECTORY)
-    {
-        int count = 0;
-
-        char **entries = SDL_GlobDirectory(path, nullptr, 0, &count);
-
-        if (!entries)
-        {
-            printf("Error: %s\n", SDL_GetError());
-            return;
-        }
-
-        for (int i = 0; i < count; i++)
-        {
-            if (std::string(entries[i]).find_last_of("/\\") == std::string::npos)
-            {
-                ScanLibrary(lib, std::string(path).append("/").append(entries[i]).c_str());
-            }
-        }
-
-        SDL_free(entries);
-    }
-}
-
 void AddQueueButton(SDL_Renderer *renderer, Frame *frame, const char *trackName, const int index)
 {
     auto *b = new TextButton(frame, {0, 0}, {static_cast<float>(frame->NumChildren()) * 0.11f}, {1, 0}, {0.1f, 0}, 5, "Roboto.ttf", 50);
@@ -289,7 +253,7 @@ void AddQueueButton(SDL_Renderer *renderer, Frame *frame, const char *trackName,
 
 void AddToQueue(void *info)
 {
-    LibraryHandler::GetLibraryHandler()->QueueTrack(static_cast<TextButtonInfo *>(info)->textString.c_str());
+    LibraryHandler::GetLibraryHandler()->QueueTrack(*static_cast<int *>(static_cast<TextButtonInfo *>(info)->userdata));
     if (PlaybackQueue::GetPlaybackQueue()->GetQueueLength() == 1)
     {
         PlaybackQueue::GetPlaybackQueue()->Play(&playback, 0);

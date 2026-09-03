@@ -143,7 +143,7 @@ ScaleOffset *Frame::GetSize() {
     return size;
 }
 
-bool Frame::IsInBounds(const float x, const float y) const
+bool Frame::IsInBounds(const float x, const float y) const // TODO Layer checking is NEEDED
 {
     return (x > rect.x && x < rect.x + rect.w) && (y > rect.y && y < rect.y + rect.h);
 }

@@ -5,23 +5,22 @@
 #include <vector>
 #include <string>
 
-typedef struct TrackInfo {
-    std::string path;
-    std::string name;
-} TrackInfo;
+typedef struct ScanContext {
+    std::vector<std::string> files;
+    std::vector<std::string> titles;
+    int count = 0;
+} ScanContext;
 
 class LibraryHandler {
 public:
     static LibraryHandler *GetLibraryHandler();
     static void Close();
 
-    void Insert(const char *path);
+    ScanContext *GetContext();
 
-    void GenerateInfo();
+    void QueueTrack(int index) const;
 
-    std::vector<TrackInfo> GetAllInfo();
-
-    void QueueTrack(const char *searchName) const;
+    void ScanLibrary();
 
 private:
     static LibraryHandler *sInstance;
@@ -29,10 +28,15 @@ private:
     char *prefPath;
 
     std::fstream library;
-    std::vector<TrackInfo> info;
+
+    ScanContext ctx;
 
     LibraryHandler();
     ~LibraryHandler();
+
+    std::vector<std::string> ScanDirectory(const char *root);
+
+    bool CheckCount();
 };
 
 #endif //LIBRARY_HANDLER_H

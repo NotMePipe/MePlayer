@@ -1,7 +1,7 @@
 # MePlayer
 A lightweight music player
 
-## Current version: 0.4.2
+## Current version: 0.4.3
 - [x] Version 1 ***(Tech demo)***
   - [x] SDL window
   - [x] play single song
@@ -12,10 +12,10 @@ A lightweight music player
   - [x] metadata extraction
 - [x] Version 4 ***(Library and UI Iteration 1)***
   - [x] library scanning (0.4.1)
-  - [ ] proper usage loop (0.4.2)
+  - [x] proper usage loop (0.4.2)
     - [x] open window with no audio
     - [x] scan library
-      - [ ] iterate through every folder in a scan list (0.4.3)
+      - [x] iterate through every folder in a scan list (0.4.3)
     - [x] display library by track name
     - [x] build queue by clicking tracks
     - [x] access queue
@@ -34,9 +34,9 @@ A lightweight music player
 - [ ] Version 5 ***(Sort by album and library overhaul)***
   - [ ] album grouping
   - [ ] library overhaul
-    - [ ] properly store library
-    - [ ] investigate duplicate name bug
-    - [ ] find better solution to queue adding
+    - [x] properly store library
+    - [x] investigate duplicate name bug
+    - will not mark as completed until update is finished as majority of update is overhauling the library
 - [ ] Version 6 ***(UI Iteration 2)***
   - [ ] proper graphics architecture
     - [ ] application state machine
@@ -69,10 +69,10 @@ A lightweight music player
   - Last updated: 0.4.2
 - [x] Library
   - Added: 0.4.0
-  - Last updated: 0.4.2
+  - Last updated: 0.5.0
 - [x] Library Handler
   - Added: 0.4.1
-  - Last updated: 0.4.2
+  - Last updated: 0.5.0
 - [x] Button
   - Added: 0.4.1
   - Last updated: 0.4.3
@@ -87,7 +87,7 @@ A lightweight music player
   - Last updated: 0.4.2
 - [x] Utils
   - Added: 0.4.2
-  - Last updated: 0.4.3
+  - Last updated: 0.5.0
 - [ ] Album
   - Planned for: 0.5.0
 - [ ] Image Button
